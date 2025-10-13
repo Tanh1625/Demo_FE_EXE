@@ -8,8 +8,6 @@ import {
   Form,
   Modal,
   Row,
-  Tab,
-  Tabs,
 } from "react-bootstrap";
 import {
   FaPhone,
