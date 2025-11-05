@@ -47,7 +47,7 @@ const LoginPage: React.FC = () => {
 
       if (success) {
         // Redirect to intended page or dashboard/home based on role
-        if (formData.email === "landlord@demo.com") {
+        if (formData.email === "admin@demo.com") {
           navigate("/dashboard");
         } else {
           navigate(from);

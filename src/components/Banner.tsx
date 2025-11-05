@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import { FaHome, FaMapMarkerAlt, FaSearch } from "react-icons/fa";
 
@@ -6,27 +6,73 @@ interface BannerProps {
   onSearchClick?: () => void;
 }
 
+// Mảng ảnh phòng trọ
+const roomImages = [
+  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&q=80",
+  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&q=80",
+  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80",
+  "https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?w=1200&q=80",
+  "https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=1200&q=80",
+];
+
 export const Banner: React.FC<BannerProps> = ({ onSearchClick }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === roomImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 5000); // Chuyển ảnh mỗi 5 giây
+
+    return () => clearInterval(interval);
+  }, []);
   return (
     <div
       className="position-relative overflow-hidden"
       style={{
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         minHeight: "70vh",
         display: "flex",
         alignItems: "center",
       }}
     >
+      {/* Background Images Slideshow */}
+      {roomImages.map((image, index) => (
+        <div
+          key={index}
+          className="position-absolute w-100 h-100"
+          style={{
+            backgroundImage: `url(${image})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: currentImageIndex === index ? 1 : 0,
+            transition: "opacity 1.5s ease-in-out",
+            zIndex: 1,
+          }}
+        />
+      ))}
+
+      {/* Overlay gradient */}
+      <div
+        className="position-absolute w-100 h-100"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(102, 126, 234, 0.85) 0%, rgba(118, 75, 162, 0.85) 100%)",
+          zIndex: 2,
+        }}
+      />
+
       {/* Background Pattern */}
       <div
         className="position-absolute w-100 h-100"
         style={{
           background: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          opacity: 0.5,
+          opacity: 0.3,
+          zIndex: 3,
         }}
       />
 
-      <Container className="position-relative">
+      <Container className="position-relative" style={{ zIndex: 10 }}>
         <Row className="justify-content-center text-center">
           <Col lg={8}>
             <div className="text-white">
@@ -89,6 +135,7 @@ export const Banner: React.FC<BannerProps> = ({ onSearchClick }) => {
           background: "rgba(255,255,255,0.1)",
           borderRadius: "50%",
           animation: "float 6s ease-in-out infinite",
+          zIndex: 4,
         }}
       />
       <div
@@ -101,8 +148,51 @@ export const Banner: React.FC<BannerProps> = ({ onSearchClick }) => {
           background: "rgba(255,255,255,0.1)",
           borderRadius: "50%",
           animation: "float 4s ease-in-out infinite reverse",
+          zIndex: 4,
         }}
       />
+
+      {/* Slide Indicators */}
+      <div
+        className="position-absolute d-flex gap-2"
+        style={{
+          bottom: "30px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 10,
+        }}
+      >
+        {roomImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentImageIndex(index)}
+            style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              border: "none",
+              background:
+                currentImageIndex === index
+                  ? "rgba(255, 255, 255, 0.9)"
+                  : "rgba(255, 255, 255, 0.4)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              padding: 0,
+            }}
+            onMouseEnter={(e) => {
+              if (currentImageIndex !== index) {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.6)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (currentImageIndex !== index) {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.4)";
+              }
+            }}
+            aria-label={`Chuyển đến ảnh ${index + 1}`}
+          />
+        ))}
+      </div>
 
       <style>{`
         @keyframes float {

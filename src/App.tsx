@@ -27,6 +27,9 @@ import ManageRoomsPage from "./pages/landlord/ManageRoomsPage";
 import ServiceManagePage from "./pages/landlord/ServiceManagePage";
 import TenantsPage from "./pages/landlord/TenantsPage";
 
+// Tenant Pages
+import MyRentalPage from "./pages/tenant/MyRentalPage";
+
 // Bootstrap CSS
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
@@ -46,6 +49,16 @@ const App: React.FC = () => {
             <Route path="contact" element={<ContactPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
+
+            {/* Tenant Routes - Protected */}
+            <Route
+              path="my-rental"
+              element={
+                <ProtectedRoute requiredRole="seeker">
+                  <MyRentalPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
           {/* Landlord Dashboard Routes */}

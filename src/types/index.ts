@@ -3,3 +3,9 @@ export type { User, LoginCredentials, RegisterData } from "./User";
 export type { Room, RoomFilter, RoomSearchParams } from "./Room";
 export type { Service, ServiceRequest, ServiceReview } from "./Service";
 export type { Bill, BillInput, DashboardStats } from "./Billing";
+export type {
+  RentalContract,
+  RentalUtilityReading,
+  RentalPayment,
+  MaintenanceRequest,
+} from "./Rental";
