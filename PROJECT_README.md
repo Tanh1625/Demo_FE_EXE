@@ -54,6 +54,12 @@ src/
 - **Tìm kiếm phòng**: Bộ lọc chi tiết (giá, vị trí, loại phòng, tiện nghi)
 - **Dịch vụ trọ**: Danh sách các dịch vụ hỗ trợ (dọn dẹp, sửa chữa, bảo trì)
 - **Hiển thị phòng**: Card component với thông tin đầy đủ
+- **Trọ của tôi**: Xem thông tin trọ đã thuê
+  - Chi tiết hợp đồng thuê
+  - Lịch sử thanh toán tiền thuê
+  - Chỉ số điện nước hàng tháng
+  - Tạo yêu cầu sửa chữa/bảo trì
+  - Theo dõi trạng thái yêu cầu
 
 ### 🏠 Chủ Trọ (Landlords)
 

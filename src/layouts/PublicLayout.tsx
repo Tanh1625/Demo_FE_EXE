@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Container, Nav, Navbar } from "react-bootstrap";
 import {
   FaCog,
   FaEnvelope,
   FaHome,
+  FaKey,
   FaSearch,
   FaSignOutAlt,
   FaUser,
@@ -19,15 +20,48 @@ interface PublicLayoutProps {
 const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Ẩn header khi cuộn xuống, hiện khi cuộn lên
+      if (currentScrollY > lastScrollY && currentScrollY > 0) {
+        setIsHeaderVisible(false);
+      } else {
+        setIsHeaderVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [lastScrollY]);
+
   return (
     <>
-      <Navbar bg="white" expand="lg" className="shadow-sm sticky-top">
+      <Navbar
+        bg="white"
+        expand="lg"
+        className="shadow-sm sticky-top"
+        style={{
+          transition: "transform 0.3s ease-in-out",
+          transform: isHeaderVisible ? "translateY(0)" : "translateY(-100%)",
+          top: 0,
+          zIndex: 1030,
+        }}
+      >
         <Container>
           <Navbar.Brand as={Link} to="/" className="fw-bold text-primary">
             <FaHome className="me-2" />
@@ -83,6 +117,16 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
                     <FaUser className="me-1" />
                     {user?.name}
                   </Nav.Link>
+                  {user?.role === "seeker" && (
+                    <Nav.Link
+                      as={Link}
+                      to="/my-rental"
+                      className="d-flex align-items-center"
+                    >
+                      <FaKey className="me-1" />
+                      Trọ của tôi
+                    </Nav.Link>
+                  )}
                   {user?.role === "landlord" && (
                     <Nav.Link
                       as={Link}
