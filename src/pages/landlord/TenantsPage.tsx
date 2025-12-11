@@ -13,12 +13,18 @@ import {
   Tabs,
 } from "react-bootstrap";
 import {
+  FaCheckCircle,
+  FaClock,
   FaEdit,
   FaEnvelope,
   FaEye,
+  FaHome,
+  FaPaperPlane,
   FaPhone,
   FaPlus,
+  FaTimesCircle,
   FaTrash,
+  FaUser,
   FaUsers,
 } from "react-icons/fa";
 
@@ -36,6 +42,7 @@ interface Tenant {
   status: "active" | "pending" | "terminated";
   avatar?: string;
   idCard: string;
+  linkedRoomId?: string; // ID phòng đã liên kết
   emergencyContact: {
     name: string;
     phone: string;
@@ -58,13 +65,35 @@ interface Contract {
   renewalCount: number;
 }
 
+interface RentalRequest {
+  id: string;
+  roomId: string;
+  roomTitle: string;
+  roomPrice: number;
+  requesterId: string;
+  requesterName: string;
+  requesterEmail: string;
+  requesterPhone: string;
+  status: "pending" | "approved" | "rejected";
+  message?: string;
+  moveInDate?: string;
+  requestDate: Date;
+}
+
 const TenantsPage: React.FC = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [rentalRequests, setRentalRequests] = useState<RentalRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showLinkRoomModal, setShowLinkRoomModal] = useState(false);
+  const [showRequestDetailModal, setShowRequestDetailModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RentalRequest | null>(
+    null
+  );
+  const [selectedRoomForLink, setSelectedRoomForLink] = useState("");
   const [activeTab, setActiveTab] = useState("tenants");
 
   const [tenantForm, setTenantForm] = useState({
@@ -106,6 +135,7 @@ const TenantsPage: React.FC = () => {
       monthlyRent: 3500000,
       status: "active",
       idCard: "123456789012",
+      linkedRoomId: "room1", // Đã liên kết
       emergencyContact: {
         name: "Nguyễn Thị Lan",
         phone: "0987654321",
@@ -126,6 +156,7 @@ const TenantsPage: React.FC = () => {
       monthlyRent: 3200000,
       status: "active",
       idCard: "987654321098",
+      linkedRoomId: "room2", // Đã liên kết
       emergencyContact: {
         name: "Trần Văn Nam",
         phone: "0901234567",
@@ -197,6 +228,38 @@ const TenantsPage: React.FC = () => {
     },
   ];
 
+  // Mock rental requests
+  const mockRentalRequests: RentalRequest[] = [
+    {
+      id: "REQ001",
+      roomId: "room4",
+      roomTitle: "Phòng C301",
+      roomPrice: 2800000,
+      requesterId: "USER001",
+      requesterName: "Phạm Thị Hương",
+      requesterEmail: "huong@example.com",
+      requesterPhone: "0934567890",
+      status: "pending",
+      message: "Em là sinh viên, muốn thuê phòng dài hạn từ tháng 1/2025.",
+      moveInDate: "2025-01-01",
+      requestDate: new Date("2024-12-08"),
+    },
+    {
+      id: "REQ002",
+      roomId: "room1",
+      roomTitle: "Phòng A101",
+      roomPrice: 3500000,
+      requesterId: "USER002",
+      requesterName: "Nguyễn Đức Anh",
+      requesterEmail: "ducanh@example.com",
+      requesterPhone: "0912345678",
+      status: "pending",
+      message: "Anh làm việc gần đây, cần thuê ngay.",
+      moveInDate: "2024-12-15",
+      requestDate: new Date("2024-12-09"),
+    },
+  ];
+
   useEffect(() => {
     // Simulate API call
     const fetchData = async () => {
@@ -204,6 +267,7 @@ const TenantsPage: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setTenants(mockTenants);
       setContracts(mockContracts);
+      setRentalRequests(mockRentalRequests);
       setLoading(false);
     };
 
@@ -288,6 +352,64 @@ const TenantsPage: React.FC = () => {
     }
   };
 
+  const handleLinkRoom = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setSelectedRoomForLink(tenant.roomId || "");
+    setShowLinkRoomModal(true);
+  };
+
+  const handleSaveLinkRoom = () => {
+    if (!selectedTenant || !selectedRoomForLink) {
+      alert("Vui lòng chọn phòng!");
+      return;
+    }
+    console.log(
+      "Linking room:",
+      selectedRoomForLink,
+      "to tenant:",
+      selectedTenant.id
+    );
+    // Implement link room logic here
+    // This should also update the tenant's linkedRoomId in the backend
+    alert("Đã liên kết phòng thành công!");
+    setShowLinkRoomModal(false);
+  };
+
+  const handleCancelContract = (tenantId: string) => {
+    if (
+      window.confirm(
+        "Bạn có chắc chắn muốn hủy hợp đồng này? Thao tác này không thể hoàn tác!"
+      )
+    ) {
+      console.log("Canceling contract for tenant:", tenantId);
+      // Implement cancel contract logic here
+      // Update tenant status to "terminated"
+      alert("Đã hủy hợp đồng!");
+    }
+  };
+
+  const handleViewRequest = (request: RentalRequest) => {
+    setSelectedRequest(request);
+    setShowRequestDetailModal(true);
+  };
+
+  const handleApproveRequest = (requestId: string) => {
+    console.log("Approving request:", requestId);
+    alert("Đã chấp nhận yêu cầu! Vui lòng liên kết phòng cho khách thuê.");
+    setShowRequestDetailModal(false);
+    // TODO: Update request status to approved, Create tenant record
+  };
+
+  const handleRejectRequest = (requestId: string) => {
+    const reason = prompt("Lý do từ chối:");
+    if (reason) {
+      console.log("Rejecting request:", requestId, "Reason:", reason);
+      alert("Đã từ chối yêu cầu!");
+      setShowRequestDetailModal(false);
+      // TODO: Update request status to rejected with reason
+    }
+  };
+
   const getExpiringContracts = () => {
     const oneMonthFromNow = new Date();
     oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
@@ -304,10 +426,6 @@ const TenantsPage: React.FC = () => {
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="fw-bold">Quản lý khách thuê</h2>
-        <Button variant="primary" onClick={handleAddTenant}>
-          <FaPlus className="me-2" />
-          Thêm khách thuê
-        </Button>
       </div>
 
       {/* Alert for expiring contracts */}
@@ -412,14 +530,27 @@ const TenantsPage: React.FC = () => {
                             >
                               <FaEdit />
                             </Button>
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() => handleDeleteTenant(tenant.id)}
-                              title="Xóa"
-                            >
-                              <FaTrash />
-                            </Button>
+                            {/* Chỉ hiện nút "Liên kết phòng" nếu chưa có linkedRoomId */}
+                            {!tenant.linkedRoomId && (
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={() => handleLinkRoom(tenant)}
+                                title="Liên kết phòng"
+                              >
+                                <FaHome />
+                              </Button>
+                            )}
+                            {tenant.status === "active" && (
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => handleCancelContract(tenant.id)}
+                                title="Hủy hợp đồng"
+                              >
+                                <FaTrash />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -499,6 +630,128 @@ const TenantsPage: React.FC = () => {
                   ))}
                 </tbody>
               </Table>
+            </Card.Body>
+          </Card>
+        </Tab>
+
+        <Tab
+          eventKey="requests"
+          title={
+            <span>
+              Yêu cầu thuê phòng (
+              {rentalRequests.filter((r) => r.status === "pending").length})
+            </span>
+          }
+        >
+          <Card className="shadow-sm">
+            <Card.Body>
+              {rentalRequests.length === 0 ? (
+                <div className="text-center py-5">
+                  <FaPaperPlane size={48} className="text-muted mb-3" />
+                  <p className="text-muted">Chưa có yêu cầu thuê phòng nào.</p>
+                </div>
+              ) : (
+                <Table hover responsive>
+                  <thead>
+                    <tr>
+                      <th>Trạng thái</th>
+                      <th>Người yêu cầu</th>
+                      <th>Phòng</th>
+                      <th>Giá</th>
+                      <th>Ngày chuyển vào</th>
+                      <th>Ngày gửi</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rentalRequests.map((request) => (
+                      <tr key={request.id}>
+                        <td>
+                          {request.status === "pending" && (
+                            <Badge bg="warning">
+                              <FaClock className="me-1" />
+                              Chờ duyệt
+                            </Badge>
+                          )}
+                          {request.status === "approved" && (
+                            <Badge bg="success">
+                              <FaCheckCircle className="me-1" />
+                              Đã chấp nhận
+                            </Badge>
+                          )}
+                          {request.status === "rejected" && (
+                            <Badge bg="danger">
+                              <FaTimesCircle className="me-1" />
+                              Từ chối
+                            </Badge>
+                          )}
+                        </td>
+                        <td>
+                          <div>
+                            <div className="fw-semibold">
+                              {request.requesterName}
+                            </div>
+                            <small className="text-muted">
+                              <FaPhone className="me-1" />
+                              {request.requesterPhone}
+                            </small>
+                          </div>
+                        </td>
+                        <td className="fw-semibold">{request.roomTitle}</td>
+                        <td className="fw-bold text-primary">
+                          {formatCurrency(request.roomPrice)}
+                        </td>
+                        <td>
+                          {request.moveInDate
+                            ? new Date(request.moveInDate).toLocaleDateString(
+                                "vi-VN"
+                              )
+                            : "-"}
+                        </td>
+                        <td>
+                          {request.requestDate.toLocaleDateString("vi-VN")}
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <Button
+                              variant="outline-info"
+                              size="sm"
+                              onClick={() => handleViewRequest(request)}
+                              title="Xem chi tiết"
+                            >
+                              <FaEye />
+                            </Button>
+                            {request.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="success"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleApproveRequest(request.id)
+                                  }
+                                  title="Chấp nhận"
+                                >
+                                  <FaCheckCircle />
+                                </Button>
+                                <Button
+                                  variant="danger"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleRejectRequest(request.id)
+                                  }
+                                  title="Từ chối"
+                                >
+                                  <FaTimesCircle />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
             </Card.Body>
           </Card>
         </Tab>
@@ -830,6 +1083,190 @@ const TenantsPage: React.FC = () => {
           <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
             Đóng
           </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Link Room Modal */}
+      <Modal
+        show={showLinkRoomModal}
+        onHide={() => setShowLinkRoomModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Liên kết phòng cho khách thuê</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedTenant && (
+            <>
+              <Alert variant="info">
+                <strong>Khách thuê:</strong> {selectedTenant.name}
+              </Alert>
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  Chọn phòng <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Select
+                  value={selectedRoomForLink}
+                  onChange={(e) => setSelectedRoomForLink(e.target.value)}
+                  required
+                >
+                  <option value="">-- Chọn phòng --</option>
+                  {availableRooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name} - {formatCurrency(room.baseRent)}/tháng
+                    </option>
+                  ))}
+                </Form.Select>
+                <Form.Text className="text-muted">
+                  Chỉ hiển thị các phòng đang trống
+                </Form.Text>
+              </Form.Group>
+              <Alert variant="warning" className="small">
+                <strong>Lưu ý:</strong> Sau khi liên kết phòng, khách thuê sẽ có
+                thể truy cập trang "Thông tin trọ" và xem thông tin hợp đồng,
+                thanh toán.
+              </Alert>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowLinkRoomModal(false)}
+          >
+            Hủy
+          </Button>
+          <Button variant="primary" onClick={handleSaveLinkRoom}>
+            Lưu liên kết
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Request Detail Modal */}
+      <Modal
+        show={showRequestDetailModal}
+        onHide={() => setShowRequestDetailModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Chi tiết yêu cầu thuê phòng</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedRequest && (
+            <>
+              <div className="mb-3">
+                <strong>Phòng:</strong>
+                <div className="mt-1">
+                  <h5>{selectedRequest.roomTitle}</h5>
+                  <p className="text-primary fw-bold mb-0">
+                    {formatCurrency(selectedRequest.roomPrice)}/tháng
+                  </p>
+                </div>
+              </div>
+
+              <hr />
+
+              <div className="mb-3">
+                <strong>Người yêu cầu:</strong>
+                <div className="mt-1">
+                  <p className="mb-1">
+                    <FaUser className="me-2" />
+                    {selectedRequest.requesterName}
+                  </p>
+                  <p className="mb-1">
+                    <FaPhone className="me-2" />
+                    {selectedRequest.requesterPhone}
+                  </p>
+                  <p className="mb-0">
+                    <FaEnvelope className="me-2" />
+                    {selectedRequest.requesterEmail}
+                  </p>
+                </div>
+              </div>
+
+              <hr />
+
+              <div className="mb-3">
+                <strong>Ngày dự kiến chuyển vào:</strong>
+                <p className="mb-0 mt-1">
+                  {selectedRequest.moveInDate
+                    ? new Date(selectedRequest.moveInDate).toLocaleDateString(
+                        "vi-VN"
+                      )
+                    : "Chưa xác định"}
+                </p>
+              </div>
+
+              {selectedRequest.message && (
+                <>
+                  <hr />
+                  <div className="mb-3">
+                    <strong>Lời nhắn:</strong>
+                    <p className="text-muted mt-1 mb-0">
+                      {selectedRequest.message}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <hr />
+
+              <div>
+                <strong>Trạng thái:</strong>
+                <div className="mt-1">
+                  {selectedRequest.status === "pending" && (
+                    <Badge bg="warning" className="fs-6">
+                      <FaClock className="me-1" />
+                      Chờ duyệt
+                    </Badge>
+                  )}
+                  {selectedRequest.status === "approved" && (
+                    <Badge bg="success" className="fs-6">
+                      <FaCheckCircle className="me-1" />
+                      Đã chấp nhận
+                    </Badge>
+                  )}
+                  {selectedRequest.status === "rejected" && (
+                    <Badge bg="danger" className="fs-6">
+                      <FaTimesCircle className="me-1" />
+                      Từ chối
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          {selectedRequest?.status === "pending" ? (
+            <>
+              <Button
+                variant="danger"
+                onClick={() =>
+                  selectedRequest && handleRejectRequest(selectedRequest.id)
+                }
+              >
+                <FaTimesCircle className="me-2" />
+                Từ chối
+              </Button>
+              <Button
+                variant="success"
+                onClick={() =>
+                  selectedRequest && handleApproveRequest(selectedRequest.id)
+                }
+              >
+                <FaCheckCircle className="me-2" />
+                Chấp nhận
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={() => setShowRequestDetailModal(false)}
+            >
+              Đóng
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
     </>

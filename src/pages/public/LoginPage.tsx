@@ -62,13 +62,26 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const fillDemoCredentials = (role: "landlord" | "seeker") => {
+  const fillDemoCredentials = (role: "admin" | "landlord" | "seeker" | "tenant") => {
     if (role === "landlord") {
       setFormData({
         email: "landlord@demo.com",
         password: "password",
       });
-    } else {
+    }
+    else if (role === "admin") {
+      setFormData({
+        email: "admin@demo.com",
+        password: "password",
+      });
+    }
+    else if (role === "tenant") {
+      setFormData({
+        email: "tenant@demo.com",
+        password: "password",
+      });
+    }
+    else {
       setFormData({
         email: "seeker@demo.com",
         password: "password",
@@ -164,6 +177,13 @@ const LoginPage: React.FC = () => {
                 </p>
                 <div className="d-grid gap-2">
                   <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => fillDemoCredentials("admin")}
+                  >
+                    Admin Demo
+                  </Button>
+                  <Button
                     variant="outline-success"
                     size="sm"
                     onClick={() => fillDemoCredentials("landlord")}
@@ -171,11 +191,18 @@ const LoginPage: React.FC = () => {
                     Chủ trọ Demo
                   </Button>
                   <Button
+                    variant="outline-warning"
+                    size="sm"
+                    onClick={() => fillDemoCredentials("tenant")}
+                  >
+                    Người thuê Demo
+                  </Button>
+                  <Button
                     variant="outline-info"
                     size="sm"
                     onClick={() => fillDemoCredentials("seeker")}
                   >
-                    Người thuê Demo
+                    Người tìm trọ Demo
                   </Button>
                 </div>
               </div>

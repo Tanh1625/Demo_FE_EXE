@@ -1,15 +1,26 @@
 import React, { useEffect, useState } from "react";
 import {
+  Accordion,
   Alert,
+  Badge,
   Button,
   Card,
   Col,
+  Collapse,
   Form,
-  Modal,
   Row,
   Table,
 } from "react-bootstrap";
-import { FaEdit, FaFileInvoiceDollar, FaPlus, FaPrint } from "react-icons/fa";
+import {
+  FaBolt,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronUp,
+  FaFileInvoiceDollar,
+  FaPrint,
+  FaSave,
+  FaTint,
+} from "react-icons/fa";
 import {
   formatPrice,
   mockBills,
@@ -17,496 +28,751 @@ import {
   type LandlordBill,
 } from "../../data/mockData";
 
-interface BillInput {
+interface RoomBillingData {
   roomId: string;
-  tenantId: string;
-  electricityUsage: number;
-  waterUsage: number;
-  serviceFees: number;
+  roomName: string;
+  tenantName: string;
+  rentPrice: number;
+  electricityPrevious: number;
+  electricityCurrent: number;
+  waterPrevious: number;
+  waterCurrent: number;
   otherFees: number;
   notes: string;
+  isExpanded: boolean;
+  isSaved: boolean; // Đã lưu cho tháng này chưa
+  lastSaved?: Date;
 }
 
 export const BillingPage: React.FC = () => {
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [electricityRate, setElectricityRate] = useState(3500);
+  const [waterRate, setWaterRate] = useState(25000);
   const [bills, setBills] = useState<LandlordBill[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateBillModal, setShowCreateBillModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  const [alertVariant, setAlertVariant] = useState<"success" | "danger">("success");
 
-  // Form state for creating new bill
-  const [billForm, setBillForm] = useState<BillInput>({
-    roomId: "",
-    tenantId: "",
-    electricityUsage: 0,
-    waterUsage: 0,
-    serviceFees: 0,
-    otherFees: 0,
-    notes: "",
-  });
+  // Mock danh sách phòng đang được thuê
+  const [roomBillings, setRoomBillings] = useState<RoomBillingData[]>([
+    {
+      roomId: "R001",
+      roomName: "Phòng 101 - Tầng 1",
+      tenantName: "Nguyễn Văn An",
+      rentPrice: 3500000,
+      electricityPrevious: 0,
+      electricityCurrent: 0,
+      waterPrevious: 0,
+      waterCurrent: 0,
+      otherFees: 0,
+      notes: "",
+      isExpanded: false,
+      isSaved: false,
+    },
+    {
+      roomId: "R002",
+      roomName: "Phòng 102 - Tầng 1",
+      tenantName: "Trần Thị Bình",
+      rentPrice: 3200000,
+      electricityPrevious: 0,
+      electricityCurrent: 0,
+      waterPrevious: 0,
+      waterCurrent: 0,
+      otherFees: 0,
+      notes: "",
+      isExpanded: false,
+      isSaved: false,
+    },
+    {
+      roomId: "R003",
+      roomName: "Phòng 201 - Tầng 2",
+      tenantName: "Lê Văn Cường",
+      rentPrice: 3800000,
+      electricityPrevious: 0,
+      electricityCurrent: 0,
+      waterPrevious: 0,
+      waterCurrent: 0,
+      otherFees: 0,
+      notes: "",
+      isExpanded: false,
+      isSaved: false,
+    },
+    {
+      roomId: "R004",
+      roomName: "Phòng 202 - Tầng 2",
+      tenantName: "Phạm Thị Dung",
+      rentPrice: 3600000,
+      electricityPrevious: 0,
+      electricityCurrent: 0,
+      waterPrevious: 0,
+      waterCurrent: 0,
+      otherFees: 0,
+      notes: "",
+      isExpanded: false,
+      isSaved: false,
+    },
+    {
+      roomId: "R005",
+      roomName: "Phòng 301 - Tầng 3",
+      tenantName: "Hoàng Văn Em",
+      rentPrice: 4000000,
+      electricityPrevious: 0,
+      electricityCurrent: 0,
+      waterPrevious: 0,
+      waterCurrent: 0,
+      otherFees: 0,
+      notes: "",
+      isExpanded: false,
+      isSaved: false,
+    },
+    {
+      roomId: "R006",
+      roomName: "Phòng 302 - Tầng 3",
+      tenantName: "Vũ Thị Phương",
+      rentPrice: 3900000,
+      electricityPrevious: 0,
+      electricityCurrent: 0,
+      waterPrevious: 0,
+      waterCurrent: 0,
+      otherFees: 0,
+      notes: "",
+      isExpanded: false,
+      isSaved: false,
+    },
+  ]);
 
   useEffect(() => {
-    // Simulate API call
     const fetchBills = async () => {
       setLoading(true);
       await new Promise((resolve) => setTimeout(resolve, 800));
       setBills(mockBills);
       setLoading(false);
     };
-
     fetchBills();
   }, []);
 
-  const handleShowCreateBillModal = () => {
-    setBillForm({
-      roomId: "",
-      tenantId: "",
-      electricityUsage: 0,
-      waterUsage: 0,
-      serviceFees: 0,
-      otherFees: 0,
-      notes: "",
-    });
-    setShowCreateBillModal(true);
+  const toggleRoomExpand = (roomId: string) => {
+    setRoomBillings((prev) =>
+      prev.map((room) =>
+        room.roomId === roomId ? { ...room, isExpanded: !room.isExpanded } : room
+      )
+    );
   };
 
-  const handleCloseModal = () => {
-    setShowCreateBillModal(false);
+  const handleRoomDataChange = (
+    roomId: string,
+    field: keyof RoomBillingData,
+    value: any
+  ) => {
+    setRoomBillings((prev) =>
+      prev.map((room) => (room.roomId === roomId ? { ...room, [field]: value } : room))
+    );
   };
 
-  const handleFormChange = (field: keyof BillInput, value: any) => {
-    setBillForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const calculateElectricityUsage = (room: RoomBillingData) => {
+    return Math.max(0, room.electricityCurrent - room.electricityPrevious);
   };
 
-  const calculateBillAmount = () => {
-    const selectedRoom = mockRooms.find((room) => room.id === billForm.roomId);
-    if (!selectedRoom) return 0;
-
-    const electricityCost = billForm.electricityUsage * 3500; // 3500 VND per kWh
-    const waterCost = billForm.waterUsage * 20000; // 20000 VND per m³
-    const roomRent = selectedRoom.price;
-    const serviceFees = billForm.serviceFees || 0;
-    const otherFees = billForm.otherFees || 0;
-
-    return electricityCost + waterCost + roomRent + serviceFees + otherFees;
+  const calculateWaterUsage = (room: RoomBillingData) => {
+    return Math.max(0, room.waterCurrent - room.waterPrevious);
   };
 
-  const handleCreateBill = () => {
-    if (!billForm.roomId) {
-      setAlertMessage("Vui lòng chọn phòng");
-      setShowAlert(true);
+  const calculateRoomTotal = (room: RoomBillingData) => {
+    const electricityUsage = calculateElectricityUsage(room);
+    const waterUsage = calculateWaterUsage(room);
+    return (
+      room.rentPrice +
+      electricityUsage * electricityRate +
+      waterUsage * waterRate +
+      room.otherFees
+    );
+  };
+
+  const handleSaveRoom = (roomId: string) => {
+    const room = roomBillings.find((r) => r.roomId === roomId);
+    if (!room) return;
+
+    // Validate
+    if (room.electricityCurrent < room.electricityPrevious) {
+      showAlertMessage("Số điện hiện tại phải lớn hơn số điện trước!", "danger");
+      return;
+    }
+    if (room.waterCurrent < room.waterPrevious) {
+      showAlertMessage("Số nước hiện tại phải lớn hơn số nước trước!", "danger");
       return;
     }
 
-    // Implement bill creation logic here
-    console.log("Creating bill:", billForm);
+    setRoomBillings((prev) =>
+      prev.map((r) =>
+        r.roomId === roomId
+          ? { ...r, isSaved: true, lastSaved: new Date() }
+          : r
+      )
+    );
+    showAlertMessage(`Đã lưu thông tin phòng ${room.roomName}`, "success");
+  };
 
-    // Show success message
-    setAlertMessage("Tạo hóa đơn thành công!");
+  const handleSaveAll = () => {
+    const unsavedRooms = roomBillings.filter((r) => !r.isSaved);
+    if (unsavedRooms.length === 0) {
+      showAlertMessage("Tất cả phòng đã được lưu!", "success");
+      return;
+    }
+
+    // Validate all rooms
+    for (const room of unsavedRooms) {
+      if (room.electricityCurrent < room.electricityPrevious) {
+        showAlertMessage(
+          `Phòng ${room.roomName}: Số điện hiện tại phải lớn hơn số điện trước!`,
+          "danger"
+        );
+        return;
+      }
+      if (room.waterCurrent < room.waterPrevious) {
+        showAlertMessage(
+          `Phòng ${room.roomName}: Số nước hiện tại phải lớn hơn số nước trước!`,
+          "danger"
+        );
+        return;
+      }
+    }
+
+    setRoomBillings((prev) =>
+      prev.map((r) => ({ ...r, isSaved: true, lastSaved: new Date() }))
+    );
+    showAlertMessage(
+      `Đã lưu thông tin ${unsavedRooms.length} phòng!`,
+      "success"
+    );
+  };
+
+  const showAlertMessage = (
+    message: string,
+    variant: "success" | "danger"
+  ) => {
+    setAlertMessage(message);
+    setAlertVariant(variant);
     setShowAlert(true);
-
-    // Close modal
-    handleCloseModal();
-
-    // Hide alert after 3 seconds
     setTimeout(() => setShowAlert(false), 3000);
   };
 
-  const handlePrintBill = (billId: string) => {
-    console.log("Printing bill:", billId);
-    // Implement print functionality
-  };
-
-  const handleEditBill = (billId: string) => {
-    console.log("Editing bill:", billId);
-    // Implement edit functionality
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return <span className="badge bg-success">Đã thanh toán</span>;
-      case "overdue":
-        return <span className="badge bg-danger">Quá hạn</span>;
-      case "pending":
-      default:
-        return <span className="badge bg-warning">Chưa thanh toán</span>;
-    }
-  };
-
-  const getRoomName = (roomId: string) => {
-    const room = mockRooms.find((r) => r.id === roomId);
-    return room ? room.title : "N/A";
-  };
+  const savedCount = roomBillings.filter((r) => r.isSaved).length;
+  const totalRevenue = roomBillings.reduce(
+    (sum, room) => (room.isSaved ? sum + calculateRoomTotal(room) : sum),
+    0
+  );
 
   return (
     <>
+      {/* Header */}
+      <div className="mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 className="fw-bold mb-2">
+              <FaFileInvoiceDollar className="me-2 text-primary" />
+              Quản lý thu chi
+            </h2>
+            <p className="text-muted mb-0">
+              Nhập thông tin điện nước cho từng phòng tháng {currentMonth}/
+              {currentYear}
+            </p>
+          </div>
+          <Button variant="success" size="lg" onClick={handleSaveAll}>
+            <FaSave className="me-2" />
+            Lưu tất cả ({roomBillings.filter((r) => !r.isSaved).length})
+          </Button>
+        </div>
+
+        {/* Summary Cards */}
+        <Row className="g-3 mb-4">
+          <Col md={3}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body>
+                <div className="text-muted small">Tổng phòng</div>
+                <h3 className="mb-0">{roomBillings.length}</h3>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body>
+                <div className="text-muted small">Đã nhập</div>
+                <h3 className="mb-0 text-success">{savedCount}</h3>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body>
+                <div className="text-muted small">Chưa nhập</div>
+                <h3 className="mb-0 text-warning">
+                  {roomBillings.length - savedCount}
+                </h3>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="border-0 shadow-sm bg-primary text-white">
+              <Card.Body>
+                <div className="small opacity-75">Tổng doanh thu</div>
+                <h4 className="mb-0">{formatPrice(totalRevenue)}</h4>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Settings */}
+        <Card className="border-0 shadow-sm mb-4">
+          <Card.Body>
+            <Row className="g-3">
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label>Tháng/Năm</Form.Label>
+                  <div className="d-flex gap-2">
+                    <Form.Select
+                      value={currentMonth}
+                      onChange={(e) => setCurrentMonth(Number(e.target.value))}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                        <option key={m} value={m}>
+                          Tháng {m}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Select
+                      value={currentYear}
+                      onChange={(e) => setCurrentYear(Number(e.target.value))}
+                    >
+                      {[2024, 2025, 2026].map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </div>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label>
+                    <FaBolt className="me-1 text-warning" />
+                    Giá điện (đ/kWh)
+                  </Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={electricityRate}
+                    onChange={(e) => setElectricityRate(Number(e.target.value))}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label>
+                    <FaTint className="me-1 text-info" />
+                    Giá nước (đ/m³)
+                  </Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={waterRate}
+                    onChange={(e) => setWaterRate(Number(e.target.value))}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      </div>
+
+      {/* Alert */}
       {showAlert && (
         <Alert
-          variant="success"
-          dismissible
+          variant={alertVariant}
           onClose={() => setShowAlert(false)}
-          className="mb-4"
+          dismissible
         >
           {alertMessage}
         </Alert>
       )}
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold">Quản lý thu chi</h2>
-        <Button variant="primary" onClick={handleShowCreateBillModal}>
-          <FaPlus className="me-2" />
-          Tạo hóa đơn mới
-        </Button>
-      </div>
+      {/* Room List */}
+      <Card className="border-0 shadow-sm">
+        <Card.Header className="bg-white">
+          <h5 className="mb-0">Danh sách phòng đang thuê</h5>
+        </Card.Header>
+        <Card.Body className="p-0">
+          {roomBillings.map((room) => {
+            const electricityUsage = calculateElectricityUsage(room);
+            const waterUsage = calculateWaterUsage(room);
+            const total = calculateRoomTotal(room);
 
-      <Row className="g-4">
-        {/* Bill Creation Form */}
-        <Col lg={4}>
-          <Card className="shadow-sm">
-            <Card.Header>
-              <h5 className="mb-0">
-                <FaFileInvoiceDollar className="me-2" />
-                Ghi số điện nước
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label>Chọn phòng</Form.Label>
-                  <Form.Select
-                    value={billForm.roomId}
-                    onChange={(e) => handleFormChange("roomId", e.target.value)}
-                  >
-                    <option value="">-- Chọn phòng --</option>
-                    {mockRooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        {room.title} - {room.area}m²
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-
-                <Row>
-                  <Col>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Điện (kWh)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={billForm.electricityUsage}
-                        onChange={(e) =>
-                          handleFormChange(
-                            "electricityUsage",
-                            Number(e.target.value)
-                          )
-                        }
-                        placeholder="0"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Nước (m³)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={billForm.waterUsage}
-                        onChange={(e) =>
-                          handleFormChange("waterUsage", Number(e.target.value))
-                        }
-                        placeholder="0"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Phí dịch vụ (VNĐ)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={billForm.serviceFees}
-                    onChange={(e) =>
-                      handleFormChange("serviceFees", Number(e.target.value))
-                    }
-                    placeholder="0"
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Phí khác (VNĐ)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={billForm.otherFees}
-                    onChange={(e) =>
-                      handleFormChange("otherFees", Number(e.target.value))
-                    }
-                    placeholder="0"
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Ghi chú</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={2}
-                    value={billForm.notes}
-                    onChange={(e) => handleFormChange("notes", e.target.value)}
-                    placeholder="Ghi chú thêm..."
-                  />
-                </Form.Group>
-
-                {billForm.roomId && (
-                  <div className="bg-light p-3 rounded mb-3">
-                    <h6>Tổng cộng</h6>
-                    <div className="fw-bold text-primary fs-5">
-                      {formatPrice(calculateBillAmount())}
+            return (
+              <div key={room.roomId} className="border-bottom">
+                {/* Room Header - Clickable */}
+                <div
+                  className="p-3 cursor-pointer hover-bg-light d-flex justify-content-between align-items-center"
+                  onClick={() => toggleRoomExpand(room.roomId)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    {room.isExpanded ? (
+                      <FaChevronUp className="text-muted" />
+                    ) : (
+                      <FaChevronDown className="text-muted" />
+                    )}
+                    <div>
+                      <h6 className="mb-1">{room.roomName}</h6>
+                      <div className="small text-muted">
+                        Khách thuê: {room.tenantName}
+                      </div>
                     </div>
                   </div>
-                )}
-
-                <Button
-                  variant="success"
-                  className="w-100"
-                  onClick={handleCreateBill}
-                  disabled={!billForm.roomId}
-                >
-                  Tạo hóa đơn
-                </Button>
-              </Form>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Bills List */}
-        <Col lg={8}>
-          <Card className="shadow-sm">
-            <Card.Header>
-              <h5 className="mb-0">Danh sách hóa đơn</h5>
-            </Card.Header>
-            <Card.Body>
-              {loading ? (
-                <div className="text-center py-5">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
+                  <div className="d-flex align-items-center gap-3">
+                    {room.isSaved ? (
+                      <Badge bg="success">
+                        <FaCheckCircle className="me-1" />
+                        Đã lưu
+                      </Badge>
+                    ) : (
+                      <Badge bg="warning">Chưa nhập</Badge>
+                    )}
+                    <div className="text-end">
+                      <div className="small text-muted">Tổng cộng</div>
+                      <h5 className="mb-0 text-primary">
+                        {formatPrice(total)}
+                      </h5>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <Table hover responsive>
-                  <thead>
-                    <tr>
-                      <th>Phòng</th>
-                      <th>Khách thuê</th>
-                      <th>Tháng/Năm</th>
-                      <th>Tổng tiền</th>
-                      <th>Hạn thanh toán</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bills.map((bill) => (
-                      <tr key={bill.id}>
-                        <td className="fw-semibold">
-                          {getRoomName(bill.roomId)}
-                        </td>
-                        <td>{bill.tenantName}</td>
-                        <td>{bill.month}</td>
-                        <td className="fw-bold text-primary">
-                          {formatPrice(bill.totalAmount)}
-                        </td>
-                        <td>
-                          {new Date(bill.dueDate).toLocaleDateString("vi-VN")}
-                        </td>
-                        <td>{getStatusBadge(bill.status)}</td>
-                        <td>
-                          <div className="d-flex gap-2">
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              onClick={() => handlePrintBill(bill.id)}
-                              title="In hóa đơn"
-                            >
-                              <FaPrint />
-                            </Button>
-                            <Button
-                              variant="outline-warning"
-                              size="sm"
-                              onClick={() => handleEditBill(bill.id)}
-                              title="Chỉnh sửa"
-                            >
-                              <FaEdit />
-                            </Button>
+
+                {/* Room Details - Collapsible */}
+                <Collapse in={room.isExpanded}>
+                  <div className="p-4 bg-light">
+                    <Row className="g-3 mb-3">
+                      <Col md={6}>
+                        <Card>
+                          <Card.Body>
+                            <h6 className="mb-3">
+                              <FaBolt className="text-warning me-2" />
+                              Điện
+                            </h6>
+                            <Row className="g-3">
+                              <Col xs={6}>
+                                <Form.Group>
+                                  <Form.Label className="small">
+                                    Số cũ (kWh)
+                                  </Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    value={room.electricityPrevious}
+                                    onChange={(e) =>
+                                      handleRoomDataChange(
+                                        room.roomId,
+                                        "electricityPrevious",
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    disabled={room.isSaved}
+                                  />
+                                </Form.Group>
+                              </Col>
+                              <Col xs={6}>
+                                <Form.Group>
+                                  <Form.Label className="small">
+                                    Số mới (kWh)
+                                  </Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    value={room.electricityCurrent}
+                                    onChange={(e) =>
+                                      handleRoomDataChange(
+                                        room.roomId,
+                                        "electricityCurrent",
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    disabled={room.isSaved}
+                                  />
+                                </Form.Group>
+                              </Col>
+                            </Row>
+                            <div className="mt-2 p-2 bg-white rounded">
+                              <div className="d-flex justify-content-between small">
+                                <span>Tiêu thụ:</span>
+                                <strong>{electricityUsage} kWh</strong>
+                              </div>
+                              <div className="d-flex justify-content-between small">
+                                <span>Thành tiền:</span>
+                                <strong className="text-warning">
+                                  {formatPrice(electricityUsage * electricityRate)}
+                                </strong>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                      <Col md={6}>
+                        <Card>
+                          <Card.Body>
+                            <h6 className="mb-3">
+                              <FaTint className="text-info me-2" />
+                              Nước
+                            </h6>
+                            <Row className="g-3">
+                              <Col xs={6}>
+                                <Form.Group>
+                                  <Form.Label className="small">
+                                    Số cũ (m³)
+                                  </Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    value={room.waterPrevious}
+                                    onChange={(e) =>
+                                      handleRoomDataChange(
+                                        room.roomId,
+                                        "waterPrevious",
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    disabled={room.isSaved}
+                                  />
+                                </Form.Group>
+                              </Col>
+                              <Col xs={6}>
+                                <Form.Group>
+                                  <Form.Label className="small">
+                                    Số mới (m³)
+                                  </Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    value={room.waterCurrent}
+                                    onChange={(e) =>
+                                      handleRoomDataChange(
+                                        room.roomId,
+                                        "waterCurrent",
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    disabled={room.isSaved}
+                                  />
+                                </Form.Group>
+                              </Col>
+                            </Row>
+                            <div className="mt-2 p-2 bg-white rounded">
+                              <div className="d-flex justify-content-between small">
+                                <span>Tiêu thụ:</span>
+                                <strong>{waterUsage} m³</strong>
+                              </div>
+                              <div className="d-flex justify-content-between small">
+                                <span>Thành tiền:</span>
+                                <strong className="text-info">
+                                  {formatPrice(waterUsage * waterRate)}
+                                </strong>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    </Row>
+
+                    <Row className="g-3 mb-3">
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>Phí khác (nếu có)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            value={room.otherFees}
+                            onChange={(e) =>
+                              handleRoomDataChange(
+                                room.roomId,
+                                "otherFees",
+                                Number(e.target.value)
+                              )
+                            }
+                            disabled={room.isSaved}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>Ghi chú</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={1}
+                            value={room.notes}
+                            onChange={(e) =>
+                              handleRoomDataChange(
+                                room.roomId,
+                                "notes",
+                                e.target.value
+                              )
+                            }
+                            disabled={room.isSaved}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    {/* Summary */}
+                    <Card className="bg-white">
+                      <Card.Body>
+                        <div className="d-flex justify-content-between mb-2">
+                          <span>Tiền phòng:</span>
+                          <strong>{formatPrice(room.rentPrice)}</strong>
+                        </div>
+                        <div className="d-flex justify-content-between mb-2">
+                          <span>Tiền điện:</span>
+                          <strong>
+                            {formatPrice(electricityUsage * electricityRate)}
+                          </strong>
+                        </div>
+                        <div className="d-flex justify-content-between mb-2">
+                          <span>Tiền nước:</span>
+                          <strong>
+                            {formatPrice(waterUsage * waterRate)}
+                          </strong>
+                        </div>
+                        {room.otherFees > 0 && (
+                          <div className="d-flex justify-content-between mb-2">
+                            <span>Phí khác:</span>
+                            <strong>{formatPrice(room.otherFees)}</strong>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+                        )}
+                        <hr />
+                        <div className="d-flex justify-content-between">
+                          <strong>Tổng cộng:</strong>
+                          <h5 className="mb-0 text-primary">
+                            {formatPrice(total)}
+                          </h5>
+                        </div>
+                      </Card.Body>
+                    </Card>
 
-      {/* Create Bill Modal (Alternative detailed form) */}
-      <Modal show={showCreateBillModal} onHide={handleCloseModal} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Tạo hóa đơn chi tiết</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Chọn phòng *</Form.Label>
-              <Form.Select
-                value={billForm.roomId}
-                onChange={(e) => handleFormChange("roomId", e.target.value)}
-              >
-                <option value="">-- Chọn phòng --</option>
-                {mockRooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.title} - {room.area}m² (Tiền thuê:{" "}
-                    {formatPrice(room.price)})
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
+                    {/* Actions */}
+                    <div className="d-flex gap-2 mt-3">
+                      {!room.isSaved ? (
+                        <Button
+                          variant="primary"
+                          onClick={() => handleSaveRoom(room.roomId)}
+                        >
+                          <FaSave className="me-2" />
+                          Lưu phòng này
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            variant="warning"
+                            onClick={() =>
+                              handleRoomDataChange(room.roomId, "isSaved", false)
+                            }
+                          >
+                            Chỉnh sửa
+                          </Button>
+                          <Button
+                            variant="outline-primary"
+                            onClick={() => handleSaveRoom(room.roomId)}
+                          >
+                            <FaSave className="me-2" />
+                            Lưu lại
+                          </Button>
+                        </>
+                      )}
+                      <Button variant="outline-primary">
+                        <FaPrint className="me-2" />
+                        In hóa đơn
+                      </Button>
+                    </div>
 
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Số điện sử dụng (kWh) *</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={billForm.electricityUsage}
-                    onChange={(e) =>
-                      handleFormChange(
-                        "electricityUsage",
-                        Number(e.target.value)
-                      )
-                    }
-                    placeholder="0"
-                  />
-                  <Form.Text className="text-muted">
-                    Giá: 3,500 VNĐ/kWh
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Số nước sử dụng (m³) *</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={billForm.waterUsage}
-                    onChange={(e) =>
-                      handleFormChange("waterUsage", Number(e.target.value))
-                    }
-                    placeholder="0"
-                  />
-                  <Form.Text className="text-muted">
-                    Giá: 20,000 VNĐ/m³
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Phí dịch vụ (VNĐ)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={billForm.serviceFees}
-                    onChange={(e) =>
-                      handleFormChange("serviceFees", Number(e.target.value))
-                    }
-                    placeholder="0"
-                  />
-                  <Form.Text className="text-muted">
-                    Phí vệ sinh, bảo trì chung...
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Phí khác (VNĐ)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={billForm.otherFees}
-                    onChange={(e) =>
-                      handleFormChange("otherFees", Number(e.target.value))
-                    }
-                    placeholder="0"
-                  />
-                  <Form.Text className="text-muted">
-                    Phí phạt, phụ phí khác...
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Ghi chú</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={billForm.notes}
-                onChange={(e) => handleFormChange("notes", e.target.value)}
-                placeholder="Ghi chú thêm về hóa đơn..."
-              />
-            </Form.Group>
-
-            {billForm.roomId && (
-              <div className="bg-light p-3 rounded">
-                <h6 className="mb-3">Chi tiết hóa đơn</h6>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Tiền phòng:</span>
-                  <span>
-                    {formatPrice(
-                      mockRooms.find((r) => r.id === billForm.roomId)?.price ||
-                        0
+                    {room.lastSaved && (
+                      <div className="small text-muted mt-2">
+                        Lưu lần cuối:{" "}
+                        {room.lastSaved.toLocaleString("vi-VN")}
+                      </div>
                     )}
-                  </span>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Tiền điện ({billForm.electricityUsage} kWh):</span>
-                  <span>{formatPrice(billForm.electricityUsage * 3500)}</span>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Tiền nước ({billForm.waterUsage} m³):</span>
-                  <span>{formatPrice(billForm.waterUsage * 20000)}</span>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Phí dịch vụ:</span>
-                  <span>{formatPrice(billForm.serviceFees || 0)}</span>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Phí khác:</span>
-                  <span>{formatPrice(billForm.otherFees || 0)}</span>
-                </div>
-                <hr />
-                <div className="d-flex justify-content-between fw-bold text-primary fs-5">
-                  <span>Tổng cộng:</span>
-                  <span>{formatPrice(calculateBillAmount())}</span>
-                </div>
+                  </div>
+                </Collapse>
               </div>
-            )}
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
-            Hủy
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleCreateBill}
-            disabled={!billForm.roomId}
-          >
-            Tạo hóa đơn
-          </Button>
-        </Modal.Footer>
-      </Modal>
+            );
+          })}
+        </Card.Body>
+      </Card>
+
+      {/* History Section */}
+      <Card className="border-0 shadow-sm mt-4">
+        <Card.Header className="bg-white">
+          <h5 className="mb-0">Lịch sử hóa đơn</h5>
+        </Card.Header>
+        <Card.Body>
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : bills.length === 0 ? (
+            <div className="text-center text-muted py-5">
+              Chưa có hóa đơn nào
+            </div>
+          ) : (
+            <Table hover responsive>
+              <thead>
+                <tr>
+                  <th>Mã HĐ</th>
+                  <th>Phòng</th>
+                  <th>Khách thuê</th>
+                  <th>Tháng</th>
+                  <th>Tổng tiền</th>
+                  <th>Trạng thái</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bills.slice(0, 10).map((bill) => (
+                  <tr key={bill.id}>
+                    <td>
+                      <strong className="text-primary">#{bill.id}</strong>
+                    </td>
+                    <td>{bill.roomId}</td>
+                    <td>{bill.tenantName}</td>
+                    <td>
+                      {bill.billingMonth}/{bill.billingYear}
+                    </td>
+                    <td>
+                      <strong className="text-success">
+                        {formatPrice(bill.totalAmount)}
+                      </strong>
+                    </td>
+                    <td>
+                      <Badge
+                        bg={
+                          bill.status === "paid"
+                            ? "success"
+                            : bill.status === "overdue"
+                            ? "danger"
+                            : "warning"
+                        }
+                      >
+                        {bill.status === "paid"
+                          ? "Đã thanh toán"
+                          : bill.status === "overdue"
+                          ? "Quá hạn"
+                          : "Chưa thanh toán"}
+                      </Badge>
+                    </td>
+                    <td>
+                      <Button variant="outline-primary" size="sm">
+                        <FaPrint />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+      </Card>
     </>
   );
 };

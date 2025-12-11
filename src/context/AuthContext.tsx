@@ -10,6 +10,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLandlord: boolean;
   isSeeker: boolean;
+  isTenant: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,16 +50,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Simulate API call - Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Mock user data - Replace with actual API response
+      // Mock user accounts for testing
+      // TÀI KHOẢN TEST:
+      // 1. admin@demo.com     - Quản trị viên (Admin Dashboard)
+      // 2. landlord@demo.com  - Chủ trọ (Landlord Dashboard)
+      // 3. tenant@demo.com    - Người thuê (có phòng liên kết)
+      // 4. seeker@demo.com    - Người tìm trọ (chưa có phòng)
+      // Password: bất kỳ
+
+      let role: "landlord" | "seeker" | "tenant" | "admin" | "guest" = "seeker";
+      let name = "Người tìm trọ";
+      let id = "USER_SEEKER";
+
+      if (credentials.email === "admin@demo.com") {
+        role = "admin";
+        name = "Quản trị viên";
+        id = "ADMIN_001";
+      } else if (credentials.email === "landlord@demo.com") {
+        role = "landlord";
+        name = "Nguyễn Văn Chủ Trọ";
+        id = "LANDLORD_001";
+      } else if (credentials.email === "tenant@demo.com") {
+        role = "tenant";
+        name = "Trần Thị Thuê";
+        id = "TENANT_001";
+      } else if (credentials.email === "seeker@demo.com") {
+        role = "seeker";
+        name = "Lê Văn Tìm";
+        id = "SEEKER_001";
+      }
+
       const mockUser: User = {
-        id: "1",
-        name:
-          credentials.email === "admin@demo.com"
-            ? "John Landlord"
-            : "Jane Seeker",
+        id,
+        name,
         email: credentials.email,
-        role: credentials.email === "admin@demo.com" ? "landlord" : "seeker",
-        phone: "+84 123 456 789",
+        role,
+        phone: "+84 901 234 567",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -86,6 +114,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     isLandlord: user?.role === "landlord",
     isSeeker: user?.role === "seeker",
+    isTenant: user?.role === "tenant",
+    isAdmin: user?.role === "admin",
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

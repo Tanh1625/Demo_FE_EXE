@@ -9,15 +9,22 @@ import {
   Row,
   Table,
 } from "react-bootstrap";
-import { FaEdit, FaEye, FaPlus, FaTrash } from "react-icons/fa";
+import { FaEdit, FaEye, FaPlus, FaTrash, FaUpload } from "react-icons/fa";
 import { formatPrice, getRoomTypeLabel, mockRooms } from "../../data/mockData";
 import type { Room } from "../../types/Room";
 
+interface RoomWithPostStatus extends Room {
+  postStatus: "draft" | "waiting_approval" | "published";
+  hostelName: string;
+}
+
 const ManageRoomsPage: React.FC = () => {
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<RoomWithPostStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [allowedPostsPerMonth] = useState(10); // From user profile
+  const [currentMonthPosts] = useState(3); // Current month usage
 
   // Form state for add/edit room
   const [roomForm, setRoomForm] = useState({
@@ -36,14 +43,32 @@ const ManageRoomsPage: React.FC = () => {
     parkingIncluded: false,
     airConditioned: false,
     furnished: false,
+    hostelId: "",
+    hostelName: "",
+    titleImages: [] as File[],
+    descriptionImages: [] as File[],
+    otherImages: [] as File[],
   });
+
+  // Mock hostels data
+  const mockHostels = [
+    { id: "hostel1", name: "Dãy trọ A - Nguyễn Huệ" },
+    { id: "hostel2", name: "Dãy trọ B - Lê Lợi" },
+    { id: "hostel3", name: "Dãy trọ C - Trần Hưng Đạo" },
+  ];
 
   useEffect(() => {
     // Simulate API call
     const fetchRooms = async () => {
       setLoading(true);
       await new Promise((resolve) => setTimeout(resolve, 800));
-      setRooms(mockRooms);
+      // Add mock approval status to rooms
+      const roomsWithApproval = mockRooms.map((room) => ({
+        ...room,
+        hostelName: "Dãy trọ A",
+        postStatus: (room.id === "1" ? "published" : room.id === "2" ? "waiting_approval" : room.id === "3" ? "draft" : "published") as "draft" | "waiting_approval" | "published",
+      }));
+      setRooms(roomsWithApproval);
       setLoading(false);
     };
 
@@ -68,6 +93,11 @@ const ManageRoomsPage: React.FC = () => {
       parkingIncluded: false,
       airConditioned: false,
       furnished: false,
+      hostelId: "",
+      hostelName: "",
+      titleImages: [],
+      descriptionImages: [],
+      otherImages: [],
     });
     setShowAddModal(true);
   };
@@ -90,6 +120,11 @@ const ManageRoomsPage: React.FC = () => {
       parkingIncluded: room.parkingIncluded,
       airConditioned: room.airConditioned,
       furnished: room.furnished,
+      hostelId: room.hostelId || "",
+      hostelName: room.hostelName || "",
+      titleImages: [],
+      descriptionImages: [],
+      otherImages: [],
     });
     setShowAddModal(true);
   };
@@ -103,6 +138,16 @@ const ManageRoomsPage: React.FC = () => {
     setRoomForm((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const handleImageUpload = (type: "title" | "description" | "other", files: FileList | null) => {
+    if (!files) return;
+    const fileArray = Array.from(files);
+    const fieldName = `${type}Images`;
+    setRoomForm((prev) => ({
+      ...prev,
+      [fieldName]: [...(prev[fieldName as keyof typeof prev] as File[]), ...fileArray],
     }));
   };
 
@@ -125,10 +170,44 @@ const ManageRoomsPage: React.FC = () => {
     // Navigate to room details page
   };
 
+  const handleRequestApproval = (roomId: string) => {
+    setRooms((prev) =>
+      prev.map((room) =>
+        room.id === roomId ? { ...room, postStatus: "waiting_approval" } : room
+      )
+    );
+    alert("Đã gửi yêu cầu đăng bài!");
+  };
+
+  const handleUnpublish = (roomId: string) => {
+    if (window.confirm("Bạn có chắc chắn muốn gỡ bài đăng này?")) {
+      setRooms((prev) =>
+        prev.map((room) =>
+          room.id === roomId ? { ...room, postStatus: "draft" } : room
+        )
+      );
+      alert("Đã gỡ bài đăng!");
+    }
+  };
+
+  const getPostStatusBadge = (status: "draft" | "waiting_approval" | "published") => {
+    const config = {
+      draft: { bg: "secondary", text: "Nháp" },
+      waiting_approval: { bg: "warning", text: "Chờ duyệt" },
+      published: { bg: "success", text: "Đã đăng" },
+    };
+    return <Badge bg={config[status].bg}>{config[status].text}</Badge>;
+  };
+
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold">Quản lý phòng trọ</h2>
+        <div>
+          <h2 className="fw-bold mb-2">Quản lý phòng trọ</h2>
+          <small className="text-muted">
+            Số bài đăng được phép: <span className="fw-bold">{currentMonthPosts}/{allowedPostsPerMonth}</span> bài/tháng
+          </small>
+        </div>
         <Button variant="primary" onClick={handleShowAddModal}>
           <FaPlus className="me-2" />
           Thêm phòng mới
@@ -151,11 +230,12 @@ const ManageRoomsPage: React.FC = () => {
               <thead>
                 <tr>
                   <th>Phòng</th>
-                  <th>Địa chỉ</th>
+                  <th>Tên trọ</th>
                   <th>Loại phòng</th>
                   <th>Giá thuê</th>
                   <th>Diện tích</th>
                   <th>Trạng thái</th>
+                  <th>Duyệt bài</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
@@ -167,7 +247,7 @@ const ManageRoomsPage: React.FC = () => {
                       <small className="text-muted">{room.description}</small>
                     </td>
                     <td>
-                      <div>{room.address}</div>
+                      <div>{room.hostelName || "Chưa chỉ định"}</div>
                       <small className="text-muted">
                         {room.district}, {room.city}
                       </small>
@@ -187,6 +267,14 @@ const ManageRoomsPage: React.FC = () => {
                       </Badge>
                     </td>
                     <td>
+                      {getPostStatusBadge(room.postStatus)}
+                      {room.postStatus === "waiting_approval" && (
+                        <div className="mt-1">
+                          <small className="text-muted">Đang chờ admin duyệt</small>
+                        </div>
+                      )}
+                    </td>
+                    <td>
                       <div className="d-flex gap-2">
                         <Button
                           variant="outline-info"
@@ -204,6 +292,26 @@ const ManageRoomsPage: React.FC = () => {
                         >
                           <FaEdit />
                         </Button>
+                        {room.postStatus === "draft" && (
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            onClick={() => handleRequestApproval(room.id)}
+                            title="Yêu cầu đăng bài"
+                          >
+                            <FaUpload />
+                          </Button>
+                        )}
+                        {room.postStatus === "published" && (
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => handleUnpublish(room.id)}
+                            title="Gỡ bài đăng"
+                          >
+                            <FaTrash />
+                          </Button>
+                        )}
                         <Button
                           variant="outline-danger"
                           size="sm"
@@ -245,6 +353,29 @@ const ManageRoomsPage: React.FC = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
+                  <Form.Label>Chọn dãy trọ *</Form.Label>
+                  <Form.Select
+                    value={roomForm.hostelId}
+                    onChange={(e) => {
+                      const selectedHostel = mockHostels.find(h => h.id === e.target.value);
+                      handleFormChange("hostelId", e.target.value);
+                      handleFormChange("hostelName", selectedHostel?.name || "");
+                    }}
+                  >
+                    <option value="">-- Chọn dãy trọ --</option>
+                    {mockHostels.map((hostel) => (
+                      <option key={hostel.id} value={hostel.id}>
+                        {hostel.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
                   <Form.Label>Loại phòng *</Form.Label>
                   <Form.Select
                     value={roomForm.roomType}
@@ -257,6 +388,20 @@ const ManageRoomsPage: React.FC = () => {
                     <option value="apartment">Căn hộ</option>
                     <option value="studio">Studio</option>
                   </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Số người tối đa *</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={roomForm.maxOccupants}
+                    onChange={(e) =>
+                      handleFormChange("maxOccupants", Number(e.target.value))
+                    }
+                    placeholder="1"
+                    min="1"
+                  />
                 </Form.Group>
               </Col>
             </Row>
@@ -344,23 +489,6 @@ const ManageRoomsPage: React.FC = () => {
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Số người tối đa *</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={roomForm.maxOccupants}
-                    onChange={(e) =>
-                      handleFormChange("maxOccupants", Number(e.target.value))
-                    }
-                    placeholder="1"
-                    min="1"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
                   <Form.Label>Giá điện (VNĐ/kWh)</Form.Label>
                   <Form.Control
                     type="number"
@@ -375,20 +503,72 @@ const ManageRoomsPage: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Giá nước (VNĐ/m³)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={roomForm.waterPrice}
-                    onChange={(e) =>
-                      handleFormChange("waterPrice", Number(e.target.value))
-                    }
-                    placeholder="0"
-                  />
-                </Form.Group>
-              </Col>
             </Row>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Giá nước (VNĐ/m³)</Form.Label>
+              <Form.Control
+                type="number"
+                value={roomForm.waterPrice}
+                onChange={(e) =>
+                  handleFormChange("waterPrice", Number(e.target.value))
+                }
+                placeholder="0"
+              />
+            </Form.Group>
+
+            {/* Image Upload Section */}
+            <div className="mb-3">
+              <Form.Label className="fw-semibold">Upload ảnh phòng</Form.Label>
+              
+              <Form.Group className="mb-3">
+                <Form.Label className="text-muted">Ảnh tiêu đề (Title)</Form.Label>
+                <div className="d-flex align-items-center gap-2">
+                  <Form.Control
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload("title", (e.target as HTMLInputElement).files)}
+                  />
+                  <FaUpload className="text-muted" />
+                </div>
+                <Form.Text className="text-muted">
+                  {roomForm.titleImages.length} ảnh đã chọn
+                </Form.Text>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="text-muted">Ảnh mô tả (Description)</Form.Label>
+                <div className="d-flex align-items-center gap-2">
+                  <Form.Control
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload("description", (e.target as HTMLInputElement).files)}
+                  />
+                  <FaUpload className="text-muted" />
+                </div>
+                <Form.Text className="text-muted">
+                  {roomForm.descriptionImages.length} ảnh đã chọn
+                </Form.Text>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="text-muted">Ảnh khác (Other)</Form.Label>
+                <div className="d-flex align-items-center gap-2">
+                  <Form.Control
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload("other", (e.target as HTMLInputElement).files)}
+                  />
+                  <FaUpload className="text-muted" />
+                </div>
+                <Form.Text className="text-muted">
+                  {roomForm.otherImages.length} ảnh đã chọn
+                </Form.Text>
+              </Form.Group>
+            </div>
 
             <div className="mb-3">
               <Form.Label className="fw-semibold">Tiện nghi</Form.Label>

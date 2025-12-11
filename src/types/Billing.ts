@@ -20,6 +20,19 @@ export interface Bill {
   updatedAt: Date;
 }
 
+export interface RoomBillInput {
+  roomId: string;
+  roomName: string;
+  tenantId?: string;
+  tenantName?: string;
+  electricityPrevious: number;
+  electricityCurrent: number;
+  electricityUsage: number;
+  waterPrevious: number;
+  waterCurrent: number;
+  waterUsage: number;
+}
+
 export interface BillInput {
   roomId: string;
   tenantId: string;
@@ -27,6 +40,16 @@ export interface BillInput {
   waterUsage: number;
   serviceFees?: number;
   otherFees?: number;
+  notes?: string;
+}
+
+export interface BatchBillInput {
+  month: number;
+  year: number;
+  electricityRate: number; // Giá điện mỗi kWh
+  waterRate: number; // Giá nước mỗi m³
+  rooms: RoomBillInput[]; // Danh sách phòng để nhập chỉ số
+  dueDate: Date;
   notes?: string;
 }
 

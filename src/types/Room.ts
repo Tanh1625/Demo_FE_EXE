@@ -1,3 +1,11 @@
+export interface RoomImage {
+  id: string;
+  url: string;
+  type: "title" | "description" | "other"; // Phân loại ảnh
+  caption?: string;
+  order: number;
+}
+
 export interface Room {
   id: string;
   title: string;
@@ -9,9 +17,12 @@ export interface Room {
   area: number; // m²
   roomType: "single" | "shared" | "apartment" | "studio";
   amenities: string[];
-  images: string[];
+  images: string[]; // Deprecated - use roomImages instead
+  roomImages?: RoomImage[]; // New structured images
   isAvailable: boolean;
   landlordId: string;
+  hostelId?: string; // ID của dãy trọ
+  hostelName?: string; // Tên dãy trọ
   maxOccupants: number;
   electricityPrice?: number;
   waterPrice?: number;
@@ -19,6 +30,10 @@ export interface Room {
   parkingIncluded: boolean;
   airConditioned: boolean;
   furnished: boolean;
+  approvalStatus: "pending" | "approved" | "rejected"; // Trạng thái duyệt bài
+  approvedBy?: string; // Admin ID
+  approvedAt?: Date;
+  rejectionReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }

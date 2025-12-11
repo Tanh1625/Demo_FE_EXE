@@ -17,6 +17,7 @@ import {
   FaCar,
   FaEnvelope,
   FaHeart,
+  FaHome,
   FaMapMarkerAlt,
   FaPhone,
   FaRuler,
@@ -27,14 +28,17 @@ import {
   FaWifi,
 } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import type { Room } from "../../types/Room";
 
 const RoomDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isLandlord, isAdmin } = useAuth();
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showRentalRequestModal, setShowRentalRequestModal] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
 
   const [contactForm, setContactForm] = useState({
@@ -42,6 +46,17 @@ const RoomDetailsPage: React.FC = () => {
     phone: "",
     email: "",
     message: "Tôi quan tâm đến phòng trọ này. Vui lòng liên hệ với tôi.",
+  });
+
+  const [rentalRequestForm, setRentalRequestForm] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    idCard: "",
+    occupation: "",
+    currentAddress: "",
+    message: "",
+    moveInDate: "",
   });
 
   // Mock room data
@@ -145,6 +160,38 @@ const RoomDetailsPage: React.FC = () => {
 
   const handleCallLandlord = () => {
     window.open(`tel:${landlordInfo.phone}`);
+  };
+
+  const handleSubmitRentalRequest = () => {
+    // Validate
+    if (!rentalRequestForm.fullName || !rentalRequestForm.phone || !rentalRequestForm.email) {
+      alert("Vui lòng điền đầy đủ thông tin cá nhân!");
+      return;
+    }
+    if (!rentalRequestForm.moveInDate) {
+      alert("Vui lòng chọn ngày dự kiến chuyển vào!");
+      return;
+    }
+
+    console.log("Submitting rental request:", {
+      roomId: room?.id,
+      ...rentalRequestForm,
+    });
+
+    setShowRentalRequestModal(false);
+    alert("Yêu cầu thuê phòng đã được gửi! Chủ trọ sẽ xem xét và phản hồi sớm.");
+    
+    // Reset form
+    setRentalRequestForm({
+      fullName: "",
+      phone: "",
+      email: "",
+      idCard: "",
+      occupation: "",
+      currentAddress: "",
+      message: "",
+      moveInDate: "",
+    });
   };
 
   const handleShare = () => {
@@ -344,6 +391,17 @@ const RoomDetailsPage: React.FC = () => {
               </ListGroup>
 
               <div className="d-grid gap-2">
+                {!isLandlord && !isAdmin && (
+                  <Button
+                    variant="success"
+                    size="lg"
+                    onClick={() => setShowRentalRequestModal(true)}
+                    className="fw-bold"
+                  >
+                    <FaHome className="me-2" />
+                    Yêu cầu thuê phòng
+                  </Button>
+                )}
                 <Button
                   variant="primary"
                   size="lg"
@@ -523,6 +581,179 @@ const RoomDetailsPage: React.FC = () => {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* Rental Request Modal */}
+      <Modal
+        show={showRentalRequestModal}
+        onHide={() => setShowRentalRequestModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Yêu cầu thuê phòng</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <h6 className="mb-3">Thông tin cá nhân</h6>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>
+              Họ và tên <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Nhập họ tên đầy đủ"
+              value={rentalRequestForm.fullName}
+              onChange={(e) =>
+                setRentalRequestForm({
+                  ...rentalRequestForm,
+                  fullName: e.target.value,
+                })
+              }
+              required
+            />
+          </Form.Group>
+
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  Số điện thoại <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  type="tel"
+                  placeholder="0912345678"
+                  value={rentalRequestForm.phone}
+                  onChange={(e) =>
+                    setRentalRequestForm({
+                      ...rentalRequestForm,
+                      phone: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  Email <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  type="email"
+                  placeholder="email@example.com"
+                  value={rentalRequestForm.email}
+                  onChange={(e) =>
+                    setRentalRequestForm({
+                      ...rentalRequestForm,
+                      email: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>CMND/CCCD</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Số CMND/CCCD"
+                  value={rentalRequestForm.idCard}
+                  onChange={(e) =>
+                    setRentalRequestForm({
+                      ...rentalRequestForm,
+                      idCard: e.target.value,
+                    })
+                  }
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Nghề nghiệp</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Sinh viên, nhân viên..."
+                  value={rentalRequestForm.occupation}
+                  onChange={(e) =>
+                    setRentalRequestForm({
+                      ...rentalRequestForm,
+                      occupation: e.target.value,
+                    })
+                  }
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Địa chỉ hiện tại</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Nhập địa chỉ hiện tại của bạn"
+              value={rentalRequestForm.currentAddress}
+              onChange={(e) =>
+                setRentalRequestForm({
+                  ...rentalRequestForm,
+                  currentAddress: e.target.value,
+                })
+              }
+            />
+          </Form.Group>
+
+          <hr />
+          <h6 className="mb-3">Thông tin thuê phòng</h6>
+
+          <Form.Group className="mb-3">
+            <Form.Label>
+              Ngày dự kiến chuyển vào <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              type="date"
+              value={rentalRequestForm.moveInDate}
+              onChange={(e) =>
+                setRentalRequestForm({
+                  ...rentalRequestForm,
+                  moveInDate: e.target.value,
+                })
+              }
+              min={new Date().toISOString().split("T")[0]}
+              required
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Lời nhắn cho chủ trọ</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              placeholder="Giới thiệu về bản thân, mục đích thuê, thời gian dự kiến thuê..."
+              value={rentalRequestForm.message}
+              onChange={(e) =>
+                setRentalRequestForm({
+                  ...rentalRequestForm,
+                  message: e.target.value,
+                })
+              }
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowRentalRequestModal(false)}
+          >
+            Hủy
+          </Button>
+          <Button variant="success" onClick={handleSubmitRentalRequest}>
+            <FaHome className="me-2" />
+            Gửi yêu cầu
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );
