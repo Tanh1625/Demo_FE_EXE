@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Alert,
   Badge,
   Button,
   Card,
@@ -35,6 +36,8 @@ import type {
 
 const MyRentalPage: React.FC = () => {
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [showCancelContractModal, setShowCancelContractModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const [newRequest, setNewRequest] = useState({
     title: "",
     category: "other" as MaintenanceRequest["category"],
@@ -197,6 +200,18 @@ const MyRentalPage: React.FC = () => {
     setNewRequest({ title: "", category: "other", description: "" });
   };
 
+  const handleCancelContract = () => {
+    if (!cancelReason.trim()) {
+      alert("Vui lòng nhập lý do hủy hợp đồng!");
+      return;
+    }
+    console.log("Cancel contract with reason:", cancelReason);
+    // TODO: Submit cancel request to API
+    alert("Yêu cầu hủy hợp đồng đã được gửi đến chủ trọ!");
+    setShowCancelContractModal(false);
+    setCancelReason("");
+  };
+
   return (
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -245,10 +260,19 @@ const MyRentalPage: React.FC = () => {
                   {formatPrice(rentalContract.monthlyRent)}
                 </h3>
               </div>
-              <div>
-                <small className="text-muted">Tiền đặt cọc</small>
-                <p className="mb-0">{formatPrice(rentalContract.deposit)}</p>
+              <div className="mb-3">
+                <h5 className="text-muted mb-1">Tiền cọc</h5>
+                <h5 className="mb-0">{formatPrice(rentalContract.deposit)}</h5>
               </div>
+              {rentalContract.contractStatus === "active" && (
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={() => setShowCancelContractModal(true)}
+                >
+                  Yêu cầu hủy hợp đồng
+                </Button>
+              )}
             </Col>
           </Row>
         </Card.Body>
@@ -658,6 +682,68 @@ const MyRentalPage: React.FC = () => {
             </Button>
           </Modal.Footer>
         </Form>
+      </Modal>
+
+      {/* Cancel Contract Modal */}
+      <Modal
+        show={showCancelContractModal}
+        onHide={() => setShowCancelContractModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="text-danger">
+            Yêu cầu hủy hợp đồng
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Alert variant="warning">
+            <FaExclamationCircle className="me-2" />
+            <strong>Lưu ý:</strong> Việc hủy hợp đồng trước thời hạn có thể ảnh
+            hưởng đến tiền cọc của bạn. Vui lòng liên hệ trực tiếp với chủ trọ
+            để thỏa thuận.
+          </Alert>
+
+          <Form.Group className="mb-3">
+            <Form.Label>
+              Lý do hủy hợp đồng <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              placeholder="Vui lòng nêu rõ lý do hủy hợp đồng..."
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              required
+            />
+          </Form.Group>
+
+          <div className="border-top pt-3">
+            <p className="mb-2">
+              <strong>Thông tin hợp đồng:</strong>
+            </p>
+            <p className="mb-1 text-muted">Phòng: {rentalContract.roomTitle}</p>
+            <p className="mb-1 text-muted">
+              Tiền thuê: {formatPrice(rentalContract.monthlyRent)}/tháng
+            </p>
+            <p className="mb-1 text-muted">
+              Tiền cọc: {formatPrice(rentalContract.deposit)}
+            </p>
+            <p className="mb-1 text-muted">
+              Ngày bắt đầu: {formatDate(rentalContract.startDate)}
+            </p>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowCancelContractModal(false)}
+          >
+            Đóng
+          </Button>
+          <Button variant="danger" onClick={handleCancelContract}>
+            Xác nhận hủy hợp đồng
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

@@ -13,22 +13,23 @@ import {
 } from "react-icons/fa";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import ChatBox from "../components/ChatBox";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isLandlord, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect if not landlord
+  // Redirect if not landlord or admin
   React.useEffect(() => {
-    if (user && user.role !== "landlord") {
+    if (user && !isLandlord && !isAdmin) {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, isLandlord, isAdmin, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -39,7 +40,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     return location.pathname === path;
   };
 
-  if (!user || user.role !== "landlord") {
+  if (!user || (!isLandlord && !isAdmin)) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <div className="spinner-border text-primary" role="status">
@@ -92,66 +93,124 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           style={{ width: "250px", minHeight: "100%" }}
         >
           <Nav className="flex-column p-3">
-            <Nav.Link
-              as={Link}
-              to="/dashboard"
-              className={`d-flex align-items-center mb-2 ${
-                isActiveRoute("/dashboard") ? "bg-primary text-white" : ""
-              } rounded`}
-            >
-              <FaTachometerAlt className="me-2" />
-              Tổng quan
-            </Nav.Link>
+            {/* Landlord Menu */}
+            {isLandlord && (
+              <>
+                <Nav.Link
+                  as={Link}
+                  to="/dashboard"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/dashboard") ? "bg-primary text-white" : ""
+                  } rounded`}
+                >
+                  <FaTachometerAlt className="me-2" />
+                  Tổng quan
+                </Nav.Link>
 
-            <Nav.Link
-              as={Link}
-              to="/dashboard/rooms"
-              className={`d-flex align-items-center mb-2 ${
-                isActiveRoute("/dashboard/rooms") ? "bg-primary text-white" : ""
-              } rounded`}
-            >
-              <FaBuilding className="me-2" />
-              Quản lý phòng
-            </Nav.Link>
+                <Nav.Link
+                  as={Link}
+                  to="/dashboard/rooms"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/dashboard/rooms")
+                      ? "bg-primary text-white"
+                      : ""
+                  } rounded`}
+                >
+                  <FaBuilding className="me-2" />
+                  Quản lý phòng
+                </Nav.Link>
 
-            <Nav.Link
-              as={Link}
-              to="/dashboard/billing"
-              className={`d-flex align-items-center mb-2 ${
-                isActiveRoute("/dashboard/billing")
-                  ? "bg-primary text-white"
-                  : ""
-              } rounded`}
-            >
-              <FaFileInvoiceDollar className="me-2" />
-              Thu chi
-            </Nav.Link>
+                <Nav.Link
+                  as={Link}
+                  to="/dashboard/hostels"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/dashboard/hostels")
+                      ? "bg-primary text-white"
+                      : ""
+                  } rounded`}
+                >
+                  <FaHome className="me-2" />
+                  Quản lý dãy trọ
+                </Nav.Link>
 
-            <Nav.Link
-              as={Link}
-              to="/dashboard/services"
-              className={`d-flex align-items-center mb-2 ${
-                isActiveRoute("/dashboard/services")
-                  ? "bg-primary text-white"
-                  : ""
-              } rounded`}
-            >
-              <FaCogs className="me-2" />
-              Dịch vụ
-            </Nav.Link>
+                <Nav.Link
+                  as={Link}
+                  to="/dashboard/billing"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/dashboard/billing")
+                      ? "bg-primary text-white"
+                      : ""
+                  } rounded`}
+                >
+                  <FaFileInvoiceDollar className="me-2" />
+                  Thu chi
+                </Nav.Link>
 
-            <Nav.Link
-              as={Link}
-              to="/dashboard/tenants"
-              className={`d-flex align-items-center mb-2 ${
-                isActiveRoute("/dashboard/tenants")
-                  ? "bg-primary text-white"
-                  : ""
-              } rounded`}
-            >
-              <FaUsers className="me-2" />
-              Khách thuê
-            </Nav.Link>
+                <Nav.Link
+                  as={Link}
+                  to="/dashboard/services"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/dashboard/services")
+                      ? "bg-primary text-white"
+                      : ""
+                  } rounded`}
+                >
+                  <FaCogs className="me-2" />
+                  Dịch vụ
+                </Nav.Link>
+
+                <Nav.Link
+                  as={Link}
+                  to="/dashboard/tenants"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/dashboard/tenants")
+                      ? "bg-primary text-white"
+                      : ""
+                  } rounded`}
+                >
+                  <FaUsers className="me-2" />
+                  Khách thuê
+                </Nav.Link>
+              </>
+            )}
+
+            {/* Admin Menu */}
+            {isAdmin && (
+              <>
+                <Nav.Link
+                  as={Link}
+                  to="/admin"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/admin") ? "bg-primary text-white" : ""
+                  } rounded`}
+                >
+                  <FaTachometerAlt className="me-2" />
+                  Dashboard
+                </Nav.Link>
+
+                <Nav.Link
+                  as={Link}
+                  to="/admin/users"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/admin/users") ? "bg-primary text-white" : ""
+                  } rounded`}
+                >
+                  <FaUsers className="me-2" />
+                  Quản lý người dùng
+                </Nav.Link>
+
+                <Nav.Link
+                  as={Link}
+                  to="/admin/posts"
+                  className={`d-flex align-items-center mb-2 ${
+                    isActiveRoute("/admin/posts") ? "bg-primary text-white" : ""
+                  } rounded`}
+                >
+                  <FaBuilding className="me-2" />
+                  Duyệt bài đăng
+                </Nav.Link>
+              </>
+            )}
           </Nav>
         </div>
 
@@ -162,6 +221,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </Container>
         </div>
       </div>
+
+      {/* ChatBox */}
+      <ChatBox />
     </div>
   );
 };

@@ -10,8 +10,9 @@ import {
   FaSignOutAlt,
   FaUser,
 } from "react-icons/fa";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import ChatBox from "../components/ChatBox";
 
 interface PublicLayoutProps {
   children?: ReactNode;
@@ -20,6 +21,7 @@ interface PublicLayoutProps {
 const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -27,6 +29,9 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
     logout();
     navigate("/");
   };
+
+  // Ẩn ChatBox trên các trang login/register
+  const shouldShowChatBox = !location.pathname.match(/^\/(login|register)$/);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -120,6 +125,16 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
                   {user?.role === "seeker" && (
                     <Nav.Link
                       as={Link}
+                      to="/rental-requests"
+                      className="d-flex align-items-center"
+                    >
+                      <FaKey className="me-1" />
+                      Yêu cầu của tôi
+                    </Nav.Link>
+                  )}
+                  {user?.role === "tenant" && (
+                    <Nav.Link
+                      as={Link}
                       to="/my-rental"
                       className="d-flex align-items-center"
                     >
@@ -134,6 +149,15 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
                       className="d-flex align-items-center"
                     >
                       Quản lý
+                    </Nav.Link>
+                  )}
+                  {user?.role === "admin" && (
+                    <Nav.Link
+                      as={Link}
+                      to="/admin"
+                      className="d-flex align-items-center"
+                    >
+                      Quản trị
                     </Nav.Link>
                   )}
                   <Nav.Link
@@ -243,6 +267,9 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
           </div>
         </Container>
       </footer>
+
+      {/* ChatBox */}
+      {shouldShowChatBox && <ChatBox />}
     </>
   );
 };

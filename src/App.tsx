@@ -23,12 +23,24 @@ import ServicePage from "./pages/public/ServicePage";
 // Landlord Pages
 import BillingPage from "./pages/landlord/BillingPage";
 import DashboardPage from "./pages/landlord/DashboardPage";
+import HostelManagePage from "./pages/landlord/HostelManagePage";
 import ManageRoomsPage from "./pages/landlord/ManageRoomsPage";
 import ServiceManagePage from "./pages/landlord/ServiceManagePage";
 import TenantsPage from "./pages/landlord/TenantsPage";
 
 // Tenant Pages
 import MyRentalPage from "./pages/tenant/MyRentalPage";
+
+// Admin Pages
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import PostApprovalPage from "./pages/admin/PostApprovalPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
+
+// Common Pages
+import FavoriteRoomsPage from "./pages/common/FavoriteRoomsPage";
+import MyRequestsPage from "./pages/common/MyRequestsPage";
+import ProfilePage from "./pages/common/ProfilePage";
+import SettingsPage from "./pages/common/SettingsPage";
 
 // Bootstrap CSS
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -50,11 +62,47 @@ const App: React.FC = () => {
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
 
-            {/* Tenant Routes - Protected */}
+            {/* Common Protected Routes */}
+            <Route
+              path="profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Seeker Routes */}
+            <Route
+              path="favorites"
+              element={
+                <ProtectedRoute requiredRole="seeker">
+                  <FavoriteRoomsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="rental-requests"
+              element={
+                <ProtectedRoute>
+                  <MyRequestsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Tenant Routes */}
             <Route
               path="my-rental"
               element={
-                <ProtectedRoute requiredRole="seeker">
+                <ProtectedRoute requiredRole="tenant">
                   <MyRentalPage />
                 </ProtectedRoute>
               }
@@ -72,9 +120,24 @@ const App: React.FC = () => {
           >
             <Route index element={<DashboardPage />} />
             <Route path="rooms" element={<ManageRoomsPage />} />
+            <Route path="hostels" element={<HostelManagePage />} />
             <Route path="billing" element={<BillingPage />} />
             <Route path="services" element={<ServiceManagePage />} />
             <Route path="tenants" element={<TenantsPage />} />
+          </Route>
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="users" element={<UserManagementPage />} />
+            <Route path="posts" element={<PostApprovalPage />} />
           </Route>
 
           {/* 404 Route */}
