@@ -21,7 +21,6 @@ import {
   FaHome,
   FaPaperPlane,
   FaPhone,
-  FaPlus,
   FaTimesCircle,
   FaTrash,
   FaUser,
@@ -301,24 +300,24 @@ const TenantsPage: React.FC = () => {
     setShowDetailModal(true);
   };
 
-  const handleAddTenant = () => {
-    setTenantForm({
-      name: "",
-      email: "",
-      phone: "",
-      roomId: "",
-      moveInDate: "",
-      contractEndDate: "",
-      deposit: 0,
-      monthlyRent: 0,
-      idCard: "",
-      emergencyContactName: "",
-      emergencyContactPhone: "",
-      emergencyContactRelationship: "",
-      notes: "",
-    });
-    setShowAddModal(true);
-  };
+  // const handleAddTenant = () => {
+  //   setTenantForm({
+  //     name: "",
+  //     email: "",
+  //     phone: "",
+  //     roomId: "",
+  //     moveInDate: "",
+  //     contractEndDate: "",
+  //     deposit: 0,
+  //     monthlyRent: 0,
+  //     idCard: "",
+  //     emergencyContactName: "",
+  //     emergencyContactPhone: "",
+  //     emergencyContactRelationship: "",
+  //     notes: "",
+  //   });
+  //   setShowAddModal(true);
+  // };
 
   const handleFormChange = (field: string, value: any) => {
     setTenantForm((prev) => ({
@@ -345,12 +344,12 @@ const TenantsPage: React.FC = () => {
     setShowAddModal(false);
   };
 
-  const handleDeleteTenant = (tenantId: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa khách thuê này?")) {
-      console.log("Deleting tenant:", tenantId);
-      // Implement delete logic here
-    }
-  };
+  // const handleDeleteTenant = (tenantId: string) => {
+  //   if (window.confirm("Bạn có chắc chắn muốn xóa khách thuê này?")) {
+  //     console.log("Deleting tenant:", tenantId);
+  //     // Implement delete logic here
+  //   }
+  // };
 
   const handleLinkRoom = (tenant: Tenant) => {
     setSelectedTenant(tenant);

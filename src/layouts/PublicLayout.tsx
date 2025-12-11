@@ -11,8 +11,8 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import ChatBox from "../components/ChatBox";
+import { useAuth } from "../context/AuthContext";
 
 interface PublicLayoutProps {
   children?: ReactNode;
