@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import { Badge, Button, Card, Form, ListGroup } from "react-bootstrap";
-import {
-  FaComments,
-  FaPaperPlane,
-  FaTimes,
-  FaUser,
-} from "react-icons/fa";
+import { FaComments, FaPaperPlane, FaTimes, FaUser } from "react-icons/fa";
 
 interface Message {
   id: string;
@@ -181,9 +176,7 @@ export const ChatBox: React.FC = () => {
                       <div>{msg.text}</div>
                       <div
                         className={`small mt-1 ${
-                          msg.sender === "user"
-                            ? "text-white-50"
-                            : "text-muted"
+                          msg.sender === "user" ? "text-white-50" : "text-muted"
                         }`}
                         style={{ fontSize: "10px" }}
                       >

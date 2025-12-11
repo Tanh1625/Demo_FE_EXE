@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Accordion,
   Alert,
   Badge,
   Button,
@@ -21,12 +20,7 @@ import {
   FaSave,
   FaTint,
 } from "react-icons/fa";
-import {
-  formatPrice,
-  mockBills,
-  mockRooms,
-  type LandlordBill,
-} from "../../data/mockData";
+import { formatPrice } from "../../data/mockData";
 
 interface RoomBillingData {
   roomId: string;
@@ -49,11 +43,12 @@ export const BillingPage: React.FC = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [electricityRate, setElectricityRate] = useState(3500);
   const [waterRate, setWaterRate] = useState(25000);
-  const [bills, setBills] = useState<LandlordBill[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertVariant, setAlertVariant] = useState<"success" | "danger">("success");
+  const [alertVariant, setAlertVariant] = useState<"success" | "danger">(
+    "success"
+  );
 
   // Mock danh sách phòng đang được thuê
   const [roomBillings, setRoomBillings] = useState<RoomBillingData[]>([
@@ -147,7 +142,7 @@ export const BillingPage: React.FC = () => {
     const fetchBills = async () => {
       setLoading(true);
       await new Promise((resolve) => setTimeout(resolve, 800));
-      setBills(mockBills);
+      // Mock data loaded from roomBillings state
       setLoading(false);
     };
     fetchBills();
@@ -156,7 +151,9 @@ export const BillingPage: React.FC = () => {
   const toggleRoomExpand = (roomId: string) => {
     setRoomBillings((prev) =>
       prev.map((room) =>
-        room.roomId === roomId ? { ...room, isExpanded: !room.isExpanded } : room
+        room.roomId === roomId
+          ? { ...room, isExpanded: !room.isExpanded }
+          : room
       )
     );
   };
@@ -167,7 +164,9 @@ export const BillingPage: React.FC = () => {
     value: any
   ) => {
     setRoomBillings((prev) =>
-      prev.map((room) => (room.roomId === roomId ? { ...room, [field]: value } : room))
+      prev.map((room) =>
+        room.roomId === roomId ? { ...room, [field]: value } : room
+      )
     );
   };
 
@@ -196,19 +195,23 @@ export const BillingPage: React.FC = () => {
 
     // Validate
     if (room.electricityCurrent < room.electricityPrevious) {
-      showAlertMessage("Số điện hiện tại phải lớn hơn số điện trước!", "danger");
+      showAlertMessage(
+        "Số điện hiện tại phải lớn hơn số điện trước!",
+        "danger"
+      );
       return;
     }
     if (room.waterCurrent < room.waterPrevious) {
-      showAlertMessage("Số nước hiện tại phải lớn hơn số nước trước!", "danger");
+      showAlertMessage(
+        "Số nước hiện tại phải lớn hơn số nước trước!",
+        "danger"
+      );
       return;
     }
 
     setRoomBillings((prev) =>
       prev.map((r) =>
-        r.roomId === roomId
-          ? { ...r, isSaved: true, lastSaved: new Date() }
-          : r
+        r.roomId === roomId ? { ...r, isSaved: true, lastSaved: new Date() } : r
       )
     );
     showAlertMessage(`Đã lưu thông tin phòng ${room.roomName}`, "success");
@@ -248,10 +251,7 @@ export const BillingPage: React.FC = () => {
     );
   };
 
-  const showAlertMessage = (
-    message: string,
-    variant: "success" | "danger"
-  ) => {
+  const showAlertMessage = (message: string, variant: "success" | "danger") => {
     setAlertMessage(message);
     setAlertVariant(variant);
     setShowAlert(true);
@@ -505,7 +505,9 @@ export const BillingPage: React.FC = () => {
                               <div className="d-flex justify-content-between small">
                                 <span>Thành tiền:</span>
                                 <strong className="text-warning">
-                                  {formatPrice(electricityUsage * electricityRate)}
+                                  {formatPrice(
+                                    electricityUsage * electricityRate
+                                  )}
                                 </strong>
                               </div>
                             </div>
@@ -630,9 +632,7 @@ export const BillingPage: React.FC = () => {
                         </div>
                         <div className="d-flex justify-content-between mb-2">
                           <span>Tiền nước:</span>
-                          <strong>
-                            {formatPrice(waterUsage * waterRate)}
-                          </strong>
+                          <strong>{formatPrice(waterUsage * waterRate)}</strong>
                         </div>
                         {room.otherFees > 0 && (
                           <div className="d-flex justify-content-between mb-2">
@@ -665,7 +665,11 @@ export const BillingPage: React.FC = () => {
                           <Button
                             variant="warning"
                             onClick={() =>
-                              handleRoomDataChange(room.roomId, "isSaved", false)
+                              handleRoomDataChange(
+                                room.roomId,
+                                "isSaved",
+                                false
+                              )
                             }
                           >
                             Chỉnh sửa
@@ -687,8 +691,7 @@ export const BillingPage: React.FC = () => {
 
                     {room.lastSaved && (
                       <div className="small text-muted mt-2">
-                        Lưu lần cuối:{" "}
-                        {room.lastSaved.toLocaleString("vi-VN")}
+                        Lưu lần cuối: {room.lastSaved.toLocaleString("vi-VN")}
                       </div>
                     )}
                   </div>
@@ -711,63 +714,57 @@ export const BillingPage: React.FC = () => {
                 <span className="visually-hidden">Loading...</span>
               </div>
             </div>
-          ) : bills.length === 0 ? (
+          ) : roomBillings.filter((r) => r.isSaved).length === 0 ? (
             <div className="text-center text-muted py-5">
-              Chưa có hóa đơn nào
+              Chưa có hóa đơn nào được lưu
             </div>
           ) : (
             <Table hover responsive>
               <thead>
                 <tr>
-                  <th>Mã HĐ</th>
-                  <th>Phòng</th>
+                  <th>Mã phòng</th>
+                  <th>Tên phòng</th>
                   <th>Khách thuê</th>
-                  <th>Tháng</th>
+                  <th>Tiền phòng</th>
+                  <th>Điện + Nước</th>
                   <th>Tổng tiền</th>
                   <th>Trạng thái</th>
-                  <th>Thao tác</th>
+                  <th>Lưu lúc</th>
                 </tr>
               </thead>
               <tbody>
-                {bills.slice(0, 10).map((bill) => (
-                  <tr key={bill.id}>
-                    <td>
-                      <strong className="text-primary">#{bill.id}</strong>
-                    </td>
-                    <td>{bill.roomId}</td>
-                    <td>{bill.tenantName}</td>
-                    <td>
-                      {bill.billingMonth}/{bill.billingYear}
-                    </td>
-                    <td>
-                      <strong className="text-success">
-                        {formatPrice(bill.totalAmount)}
-                      </strong>
-                    </td>
-                    <td>
-                      <Badge
-                        bg={
-                          bill.status === "paid"
-                            ? "success"
-                            : bill.status === "overdue"
-                            ? "danger"
-                            : "warning"
-                        }
-                      >
-                        {bill.status === "paid"
-                          ? "Đã thanh toán"
-                          : bill.status === "overdue"
-                          ? "Quá hạn"
-                          : "Chưa thanh toán"}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Button variant="outline-primary" size="sm">
-                        <FaPrint />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {roomBillings
+                  .filter((r) => r.isSaved)
+                  .slice(0, 10)
+                  .map((room) => (
+                    <tr key={room.roomId}>
+                      <td>
+                        <strong className="text-primary">#{room.roomId}</strong>
+                      </td>
+                      <td>{room.roomName}</td>
+                      <td>{room.tenantName}</td>
+                      <td>{formatPrice(room.rentPrice)}</td>
+                      <td>
+                        {formatPrice(
+                          calculateElectricityUsage(room) * electricityRate +
+                            calculateWaterUsage(room) * waterRate
+                        )}
+                      </td>
+                      <td>
+                        <strong className="text-success">
+                          {formatPrice(calculateRoomTotal(room))}
+                        </strong>
+                      </td>
+                      <td>
+                        <Badge bg="success">Đã lưu</Badge>
+                      </td>
+                      <td>
+                        <small className="text-muted">
+                          {room.lastSaved?.toLocaleString("vi-VN")}
+                        </small>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </Table>
           )}

@@ -14,7 +14,6 @@ import type { Room } from "../../types/Room";
 
 const PostApprovalPage: React.FC = () => {
   const [posts, setPosts] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Room | null>(null);
   const [reviewForm, setReviewForm] = useState({
@@ -146,75 +145,67 @@ const PostApprovalPage: React.FC = () => {
           <h5 className="mb-0">Danh sách bài đăng</h5>
         </Card.Header>
         <Card.Body>
-          {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          ) : (
-            <Table hover responsive>
-              <thead>
-                <tr>
-                  <th>Tiêu đề</th>
-                  <th>Chủ trọ</th>
-                  <th>Địa chỉ</th>
-                  <th>Giá</th>
-                  <th>Ngày tạo</th>
-                  <th>Trạng thái</th>
-                  <th>Thao tác</th>
+          <Table hover responsive>
+            <thead>
+              <tr>
+                <th>Tiêu đề</th>
+                <th>Chủ trọ</th>
+                <th>Địa chỉ</th>
+                <th>Giá</th>
+                <th>Ngày tạo</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {posts.map((post) => (
+                <tr key={post.id}>
+                  <td>
+                    <div className="fw-semibold">{post.title}</div>
+                    <small className="text-muted">{post.hostelName}</small>
+                  </td>
+                  <td>Chủ trọ #{post.landlordId}</td>
+                  <td>
+                    <div>{post.address}</div>
+                    <small className="text-muted">
+                      {post.district}, {post.city}
+                    </small>
+                  </td>
+                  <td className="fw-bold text-primary">
+                    {formatPrice(post.price)}
+                  </td>
+                  <td>
+                    {new Date(post.createdAt).toLocaleDateString("vi-VN")}
+                  </td>
+                  <td>{getApprovalBadge(post.approvalStatus)}</td>
+                  <td>
+                    <div className="d-flex gap-2">
+                      <Button
+                        variant="outline-info"
+                        size="sm"
+                        onClick={() => console.log("View:", post.id)}
+                        title="Xem chi tiết"
+                      >
+                        <FaEye />
+                      </Button>
+                      {post.approvalStatus === "pending" && (
+                        <>
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            onClick={() => handleShowReviewModal(post)}
+                            title="Duyệt"
+                          >
+                            <FaCheckCircle />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {posts.map((post) => (
-                  <tr key={post.id}>
-                    <td>
-                      <div className="fw-semibold">{post.title}</div>
-                      <small className="text-muted">{post.hostelName}</small>
-                    </td>
-                    <td>Chủ trọ #{post.landlordId}</td>
-                    <td>
-                      <div>{post.address}</div>
-                      <small className="text-muted">
-                        {post.district}, {post.city}
-                      </small>
-                    </td>
-                    <td className="fw-bold text-primary">
-                      {formatPrice(post.price)}
-                    </td>
-                    <td>
-                      {new Date(post.createdAt).toLocaleDateString("vi-VN")}
-                    </td>
-                    <td>{getApprovalBadge(post.approvalStatus)}</td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <Button
-                          variant="outline-info"
-                          size="sm"
-                          onClick={() => console.log("View:", post.id)}
-                          title="Xem chi tiết"
-                        >
-                          <FaEye />
-                        </Button>
-                        {post.approvalStatus === "pending" && (
-                          <>
-                            <Button
-                              variant="outline-success"
-                              size="sm"
-                              onClick={() => handleShowReviewModal(post)}
-                              title="Duyệt"
-                            >
-                              <FaCheckCircle />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
+              ))}
+            </tbody>
+          </Table>
         </Card.Body>
       </Card>
 

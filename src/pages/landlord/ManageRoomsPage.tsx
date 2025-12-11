@@ -66,7 +66,13 @@ const ManageRoomsPage: React.FC = () => {
       const roomsWithApproval = mockRooms.map((room) => ({
         ...room,
         hostelName: "Dãy trọ A",
-        postStatus: (room.id === "1" ? "published" : room.id === "2" ? "waiting_approval" : room.id === "3" ? "draft" : "published") as "draft" | "waiting_approval" | "published",
+        postStatus: (room.id === "1"
+          ? "published"
+          : room.id === "2"
+          ? "waiting_approval"
+          : room.id === "3"
+          ? "draft"
+          : "published") as "draft" | "waiting_approval" | "published",
       }));
       setRooms(roomsWithApproval);
       setLoading(false);
@@ -141,13 +147,19 @@ const ManageRoomsPage: React.FC = () => {
     }));
   };
 
-  const handleImageUpload = (type: "title" | "description" | "other", files: FileList | null) => {
+  const handleImageUpload = (
+    type: "title" | "description" | "other",
+    files: FileList | null
+  ) => {
     if (!files) return;
     const fileArray = Array.from(files);
     const fieldName = `${type}Images`;
     setRoomForm((prev) => ({
       ...prev,
-      [fieldName]: [...(prev[fieldName as keyof typeof prev] as File[]), ...fileArray],
+      [fieldName]: [
+        ...(prev[fieldName as keyof typeof prev] as File[]),
+        ...fileArray,
+      ],
     }));
   };
 
@@ -190,7 +202,9 @@ const ManageRoomsPage: React.FC = () => {
     }
   };
 
-  const getPostStatusBadge = (status: "draft" | "waiting_approval" | "published") => {
+  const getPostStatusBadge = (
+    status: "draft" | "waiting_approval" | "published"
+  ) => {
     const config = {
       draft: { bg: "secondary", text: "Nháp" },
       waiting_approval: { bg: "warning", text: "Chờ duyệt" },
@@ -205,7 +219,11 @@ const ManageRoomsPage: React.FC = () => {
         <div>
           <h2 className="fw-bold mb-2">Quản lý phòng trọ</h2>
           <small className="text-muted">
-            Số bài đăng được phép: <span className="fw-bold">{currentMonthPosts}/{allowedPostsPerMonth}</span> bài/tháng
+            Số bài đăng được phép:{" "}
+            <span className="fw-bold">
+              {currentMonthPosts}/{allowedPostsPerMonth}
+            </span>{" "}
+            bài/tháng
           </small>
         </div>
         <Button variant="primary" onClick={handleShowAddModal}>
@@ -270,7 +288,9 @@ const ManageRoomsPage: React.FC = () => {
                       {getPostStatusBadge(room.postStatus)}
                       {room.postStatus === "waiting_approval" && (
                         <div className="mt-1">
-                          <small className="text-muted">Đang chờ admin duyệt</small>
+                          <small className="text-muted">
+                            Đang chờ admin duyệt
+                          </small>
                         </div>
                       )}
                     </td>
@@ -357,9 +377,14 @@ const ManageRoomsPage: React.FC = () => {
                   <Form.Select
                     value={roomForm.hostelId}
                     onChange={(e) => {
-                      const selectedHostel = mockHostels.find(h => h.id === e.target.value);
+                      const selectedHostel = mockHostels.find(
+                        (h) => h.id === e.target.value
+                      );
                       handleFormChange("hostelId", e.target.value);
-                      handleFormChange("hostelName", selectedHostel?.name || "");
+                      handleFormChange(
+                        "hostelName",
+                        selectedHostel?.name || ""
+                      );
                     }}
                   >
                     <option value="">-- Chọn dãy trọ --</option>
@@ -520,15 +545,22 @@ const ManageRoomsPage: React.FC = () => {
             {/* Image Upload Section */}
             <div className="mb-3">
               <Form.Label className="fw-semibold">Upload ảnh phòng</Form.Label>
-              
+
               <Form.Group className="mb-3">
-                <Form.Label className="text-muted">Ảnh tiêu đề (Title)</Form.Label>
+                <Form.Label className="text-muted">
+                  Ảnh tiêu đề (Title)
+                </Form.Label>
                 <div className="d-flex align-items-center gap-2">
                   <Form.Control
                     type="file"
                     multiple
                     accept="image/*"
-                    onChange={(e) => handleImageUpload("title", (e.target as HTMLInputElement).files)}
+                    onChange={(e) =>
+                      handleImageUpload(
+                        "title",
+                        (e.target as HTMLInputElement).files
+                      )
+                    }
                   />
                   <FaUpload className="text-muted" />
                 </div>
@@ -538,13 +570,20 @@ const ManageRoomsPage: React.FC = () => {
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label className="text-muted">Ảnh mô tả (Description)</Form.Label>
+                <Form.Label className="text-muted">
+                  Ảnh mô tả (Description)
+                </Form.Label>
                 <div className="d-flex align-items-center gap-2">
                   <Form.Control
                     type="file"
                     multiple
                     accept="image/*"
-                    onChange={(e) => handleImageUpload("description", (e.target as HTMLInputElement).files)}
+                    onChange={(e) =>
+                      handleImageUpload(
+                        "description",
+                        (e.target as HTMLInputElement).files
+                      )
+                    }
                   />
                   <FaUpload className="text-muted" />
                 </div>
@@ -560,7 +599,12 @@ const ManageRoomsPage: React.FC = () => {
                     type="file"
                     multiple
                     accept="image/*"
-                    onChange={(e) => handleImageUpload("other", (e.target as HTMLInputElement).files)}
+                    onChange={(e) =>
+                      handleImageUpload(
+                        "other",
+                        (e.target as HTMLInputElement).files
+                      )
+                    }
                   />
                   <FaUpload className="text-muted" />
                 </div>

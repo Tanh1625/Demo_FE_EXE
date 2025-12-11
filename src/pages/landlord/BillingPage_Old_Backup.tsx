@@ -9,7 +9,7 @@ import {
   Row,
   Table,
 } from "react-bootstrap";
-import { FaEdit, FaFileInvoiceDollar, FaPlus, FaPrint, FaTrash } from "react-icons/fa";
+import { FaEdit, FaFileInvoiceDollar, FaPlus, FaPrint } from "react-icons/fa";
 import {
   formatPrice,
   mockBills,
@@ -37,18 +37,20 @@ export const BillingPage: React.FC = () => {
   });
 
   // Mock rooms with tenants
-  const occupiedRooms = mockRooms.filter((room) => !room.isAvailable).map((room) => ({
-    roomId: room.id,
-    roomName: room.title,
-    tenantId: `tenant_${room.id}`,
-    tenantName: `Người thuê ${room.title}`,
-    electricityPrevious: 0,
-    electricityCurrent: 0,
-    electricityUsage: 0,
-    waterPrevious: 0,
-    waterCurrent: 0,
-    waterUsage: 0,
-  }));
+  const occupiedRooms = mockRooms
+    .filter((room) => !room.isAvailable)
+    .map((room) => ({
+      roomId: room.id,
+      roomName: room.title,
+      tenantId: `tenant_${room.id}`,
+      tenantName: `Người thuê ${room.title}`,
+      electricityPrevious: 0,
+      electricityCurrent: 0,
+      electricityUsage: 0,
+      waterPrevious: 0,
+      waterCurrent: 0,
+      waterUsage: 0,
+    }));
 
   const [roomBills, setRoomBills] = useState<RoomBillInput[]>(occupiedRooms);
 
@@ -88,9 +90,12 @@ export const BillingPage: React.FC = () => {
       prev.map((room) => {
         if (room.roomId === roomId) {
           const updated = { ...room, [field]: value };
-          
+
           // Auto calculate usage
-          if (field === "electricityCurrent" || field === "electricityPrevious") {
+          if (
+            field === "electricityCurrent" ||
+            field === "electricityPrevious"
+          ) {
             updated.electricityUsage = Math.max(
               0,
               updated.electricityCurrent - updated.electricityPrevious
@@ -102,7 +107,7 @@ export const BillingPage: React.FC = () => {
               updated.waterCurrent - updated.waterPrevious
             );
           }
-          
+
           return updated;
         }
         return room;
@@ -114,7 +119,8 @@ export const BillingPage: React.FC = () => {
     const originalRoom = mockRooms.find((r) => r.id === room.roomId);
     if (!originalRoom) return 0;
 
-    const electricityCost = room.electricityUsage * batchBillForm.electricityRate;
+    const electricityCost =
+      room.electricityUsage * batchBillForm.electricityRate;
     const waterCost = room.waterUsage * batchBillForm.waterRate;
     const roomRent = originalRoom.price;
 
@@ -264,20 +270,22 @@ export const BillingPage: React.FC = () => {
                       {bill.electricityUsage} kWh
                       <br />
                       <small className="text-muted">
-                        {formatPrice(bill.electricityCost)}
+                        {formatPrice(bill.electricityCost || 0)}
                       </small>
                     </td>
                     <td>
                       {bill.waterUsage} m³
                       <br />
                       <small className="text-muted">
-                        {formatPrice(bill.waterCost)}
+                        {formatPrice(bill.waterCost || 0)}
                       </small>
                     </td>
                     <td className="fw-bold text-primary">
                       {formatPrice(bill.totalAmount)}
                     </td>
-                    <td>{new Date(bill.dueDate).toLocaleDateString("vi-VN")}</td>
+                    <td>
+                      {new Date(bill.dueDate).toLocaleDateString("vi-VN")}
+                    </td>
                     <td>{getStatusBadge(bill.status)}</td>
                     <td>
                       <div className="d-flex gap-2">
@@ -356,7 +364,10 @@ export const BillingPage: React.FC = () => {
                     type="number"
                     value={batchBillForm.electricityRate}
                     onChange={(e) =>
-                      handleBatchFormChange("electricityRate", Number(e.target.value))
+                      handleBatchFormChange(
+                        "electricityRate",
+                        Number(e.target.value)
+                      )
                     }
                   />
                 </Form.Group>
@@ -382,7 +393,9 @@ export const BillingPage: React.FC = () => {
                   <Form.Control
                     type="date"
                     value={batchBillForm.dueDate}
-                    onChange={(e) => handleBatchFormChange("dueDate", e.target.value)}
+                    onChange={(e) =>
+                      handleBatchFormChange("dueDate", e.target.value)
+                    }
                   />
                 </Form.Group>
               </Col>
@@ -392,7 +405,9 @@ export const BillingPage: React.FC = () => {
                   <Form.Control
                     type="text"
                     value={batchBillForm.notes}
-                    onChange={(e) => handleBatchFormChange("notes", e.target.value)}
+                    onChange={(e) =>
+                      handleBatchFormChange("notes", e.target.value)
+                    }
                     placeholder="Ghi chú chung cho tất cả hóa đơn"
                   />
                 </Form.Group>
@@ -451,7 +466,9 @@ export const BillingPage: React.FC = () => {
                         min="0"
                       />
                     </td>
-                    <td className="fw-bold text-primary">{room.electricityUsage}</td>
+                    <td className="fw-bold text-primary">
+                      {room.electricityUsage}
+                    </td>
                     <td>
                       <Form.Control
                         type="number"

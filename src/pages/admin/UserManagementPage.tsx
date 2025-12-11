@@ -23,7 +23,6 @@ import type { User } from "../../types/User";
 
 const UserManagementPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState("all");
@@ -72,7 +71,7 @@ const UserManagementPage: React.FC = () => {
     name: "",
     email: "",
     phone: "",
-    role: "seeker" as "seeker" | "tenant" | "landlord" | "admin",
+    role: "seeker" as "seeker" | "tenant" | "landlord" | "admin" | "guest",
     allowedPostsPerMonth: 5,
   });
 
@@ -172,97 +171,89 @@ const UserManagementPage: React.FC = () => {
           </Tabs>
         </Card.Header>
         <Card.Body>
-          {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          ) : (
-            <Table hover responsive>
-              <thead>
-                <tr>
-                  <th>Họ tên</th>
-                  <th>Email</th>
-                  <th>Số điện thoại</th>
-                  <th>Vai trò</th>
-                  <th>Bài đăng/tháng</th>
-                  <th>Ngày tạo</th>
-                  <th>Trạng thái</th>
-                  <th>Thao tác</th>
+          <Table hover responsive>
+            <thead>
+              <tr>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th>Vai trò</th>
+                <th>Bài đăng/tháng</th>
+                <th>Ngày tạo</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => (
+                <tr key={user.id}>
+                  <td className="fw-semibold">{user.name}</td>
+                  <td>
+                    <div>{user.email}</div>
+                    {user.isEmailVerified && (
+                      <small className="text-success">
+                        <FaCheckCircle className="me-1" />
+                        Đã xác thực
+                      </small>
+                    )}
+                  </td>
+                  <td>{user.phone || "—"}</td>
+                  <td>{getRoleBadge(user.role)}</td>
+                  <td>
+                    {user.role === "landlord" ? (
+                      <span className="fw-bold">
+                        {user.allowedPostsPerMonth || "—"}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td>
+                    {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                  </td>
+                  <td>
+                    <Badge bg="success">Hoạt động</Badge>
+                  </td>
+                  <td>
+                    <div className="d-flex gap-2">
+                      <Button
+                        variant="outline-info"
+                        size="sm"
+                        onClick={() => console.log("View user:", user.id)}
+                        title="Xem chi tiết"
+                      >
+                        <FaEye />
+                      </Button>
+                      <Button
+                        variant="outline-warning"
+                        size="sm"
+                        onClick={() => handleShowUserModal(user)}
+                        title="Chỉnh sửa"
+                      >
+                        <FaEdit />
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => handleToggleStatus(user.id)}
+                        title="Khóa/Mở khóa"
+                      >
+                        <FaBan />
+                      </Button>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id)}
+                        title="Xóa"
+                      >
+                        <FaTrash />
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td className="fw-semibold">{user.name}</td>
-                    <td>
-                      <div>{user.email}</div>
-                      {user.isEmailVerified && (
-                        <small className="text-success">
-                          <FaCheckCircle className="me-1" />
-                          Đã xác thực
-                        </small>
-                      )}
-                    </td>
-                    <td>{user.phone || "—"}</td>
-                    <td>{getRoleBadge(user.role)}</td>
-                    <td>
-                      {user.role === "landlord" ? (
-                        <span className="fw-bold">
-                          {user.allowedPostsPerMonth || "—"}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td>
-                      {new Date(user.createdAt).toLocaleDateString("vi-VN")}
-                    </td>
-                    <td>
-                      <Badge bg="success">Hoạt động</Badge>
-                    </td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <Button
-                          variant="outline-info"
-                          size="sm"
-                          onClick={() => console.log("View user:", user.id)}
-                          title="Xem chi tiết"
-                        >
-                          <FaEye />
-                        </Button>
-                        <Button
-                          variant="outline-warning"
-                          size="sm"
-                          onClick={() => handleShowUserModal(user)}
-                          title="Chỉnh sửa"
-                        >
-                          <FaEdit />
-                        </Button>
-                        <Button
-                          variant="outline-secondary"
-                          size="sm"
-                          onClick={() => handleToggleStatus(user.id)}
-                          title="Khóa/Mở khóa"
-                        >
-                          <FaBan />
-                        </Button>
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
-                          title="Xóa"
-                        >
-                          <FaTrash />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
+              ))}
+            </tbody>
+          </Table>
         </Card.Body>
       </Card>
 

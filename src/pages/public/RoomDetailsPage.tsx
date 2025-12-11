@@ -104,6 +104,7 @@ const RoomDetailsPage: React.FC = () => {
     parkingIncluded: true,
     airConditioned: true,
     furnished: true,
+    approvalStatus: "approved",
     createdAt: new Date("2024-03-15"),
     updatedAt: new Date("2024-03-15"),
   };
@@ -164,7 +165,11 @@ const RoomDetailsPage: React.FC = () => {
 
   const handleSubmitRentalRequest = () => {
     // Validate
-    if (!rentalRequestForm.fullName || !rentalRequestForm.phone || !rentalRequestForm.email) {
+    if (
+      !rentalRequestForm.fullName ||
+      !rentalRequestForm.phone ||
+      !rentalRequestForm.email
+    ) {
       alert("Vui lòng điền đầy đủ thông tin cá nhân!");
       return;
     }
@@ -179,8 +184,10 @@ const RoomDetailsPage: React.FC = () => {
     });
 
     setShowRentalRequestModal(false);
-    alert("Yêu cầu thuê phòng đã được gửi! Chủ trọ sẽ xem xét và phản hồi sớm.");
-    
+    alert(
+      "Yêu cầu thuê phòng đã được gửi! Chủ trọ sẽ xem xét và phản hồi sớm."
+    );
+
     // Reset form
     setRentalRequestForm({
       fullName: "",
@@ -595,7 +602,7 @@ const RoomDetailsPage: React.FC = () => {
         </Modal.Header>
         <Modal.Body>
           <h6 className="mb-3">Thông tin cá nhân</h6>
-          
+
           <Form.Group className="mb-3">
             <Form.Label>
               Họ và tên <span className="text-danger">*</span>

@@ -19,15 +19,20 @@ export interface LandlordBill {
   tenantName: string;
   tenantPhone: string;
   month: string;
+  billingMonth?: number;
+  billingYear?: number;
   rentAmount: number;
   electricityUsage: number;
   electricityRate: number;
+  electricityCost?: number;
   waterUsage: number;
   waterRate: number;
+  waterCost?: number;
   otherFees: number;
   totalAmount: number;
   status: "paid" | "pending" | "overdue";
   paidDate?: Date;
+  year?: number;
   dueDate: Date;
   contractStart: Date;
   contractEnd: Date;
@@ -107,9 +112,10 @@ export const mockRooms: Room[] = [
     electricityPrice: 3500,
     waterPrice: 25000,
     internetIncluded: true,
-    parkingIncluded: true,
+    parkingIncluded: false,
     airConditioned: true,
-    furnished: true,
+    furnished: false,
+    approvalStatus: "approved",
     createdAt: new Date("2024-01-15"),
     updatedAt: new Date("2024-10-11"),
   },
@@ -136,10 +142,11 @@ export const mockRooms: Room[] = [
     maxOccupants: 2,
     electricityPrice: 3500,
     waterPrice: 25000,
-    internetIncluded: true,
+    internetIncluded: false,
     parkingIncluded: true,
     airConditioned: true,
     furnished: true,
+    approvalStatus: "approved",
     createdAt: new Date("2024-02-01"),
     updatedAt: new Date("2024-10-11"),
   },
@@ -166,10 +173,11 @@ export const mockRooms: Room[] = [
     electricityPrice: 3500,
     waterPrice: 25000,
     internetIncluded: true,
-    parkingIncluded: true,
+    parkingIncluded: false,
     airConditioned: false,
     furnished: false,
-    createdAt: new Date("2024-01-20"),
+    approvalStatus: "approved",
+    createdAt: new Date("2024-02-12"),
     updatedAt: new Date("2024-10-11"),
   },
   {
@@ -209,6 +217,7 @@ export const mockRooms: Room[] = [
     parkingIncluded: true,
     airConditioned: true,
     furnished: true,
+    approvalStatus: "approved",
     createdAt: new Date("2024-02-10"),
     updatedAt: new Date("2024-10-11"),
   },
@@ -238,7 +247,8 @@ export const mockRooms: Room[] = [
     parkingIncluded: true,
     airConditioned: true,
     furnished: true,
-    createdAt: new Date("2024-01-25"),
+    approvalStatus: "approved",
+    createdAt: new Date("2024-01-20"),
     updatedAt: new Date("2024-10-11"),
   },
   {
@@ -278,6 +288,7 @@ export const mockRooms: Room[] = [
     parkingIncluded: true,
     airConditioned: true,
     furnished: true,
+    approvalStatus: "approved",
     createdAt: new Date("2024-02-15"),
     updatedAt: new Date("2024-10-11"),
   },
@@ -306,6 +317,7 @@ export const mockRooms: Room[] = [
     parkingIncluded: false,
     airConditioned: false,
     furnished: true,
+    approvalStatus: "approved",
     createdAt: new Date("2024-01-30"),
     updatedAt: new Date("2024-10-11"),
   },
@@ -335,7 +347,8 @@ export const mockRooms: Room[] = [
     parkingIncluded: true,
     airConditioned: true,
     furnished: true,
-    createdAt: new Date("2024-02-05"),
+    approvalStatus: "approved",
+    createdAt: new Date("2024-02-15"),
     updatedAt: new Date("2024-10-11"),
   },
 ];
